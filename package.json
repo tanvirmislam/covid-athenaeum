@@ -1,0 +1,52 @@
+{
+  "name": "covid-athenaeum",
+  "version": "1.0.0",
+  "description": "Information hub for COVID-19",
+  "main": "app.js",
+  "scripts": {
+    "transpile": "babel ./server -d dist_server",
+    "clean": "rimraf dist_server",
+    "build": "npm-run-all clean transpile",
+    "serve-dev": "nodemon ./dist_server/app.js",
+    "serve": "node ./dist_server/app.js",
+    "dev": "NODE_ENV=development npm-run-all build serve-dev",
+    "prod": "NODE_ENV=production npm-run-all build serve",
+    "start": "npm run prod"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tanvirmislam/covid-athenaeum.git"
+  },
+  "keywords": [
+    "data",
+    "visualization",
+    "learning",
+    "information",
+    "d3",
+    "covid",
+    "coronavirus",
+    "awareness"
+  ],
+  "author": "Tanvir",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tanvirmislam/covid-athenaeum/issues"
+  },
+  "homepage": "https://github.com/tanvirmislam/covid-athenaeum#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mongodb": "^3.5.5",
+    "npm-run-all": "^4.1.5"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/preset-env": "^7.9.0",
+    "@babel/register": "^7.9.0",
+    "nodemon": "^2.0.2",
+    "rimraf": "^3.0.2"
+  }
+}
