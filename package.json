@@ -7,11 +7,11 @@
     "transpile": "babel ./server -d dist_server",
     "clean": "rimraf dist_server",
     "build": "npm-run-all clean transpile",
-    "serve-dev": "nodemon ./dist_server/app.js",
-    "serve": "node ./dist_server/app.js",
-    "dev": "NODE_ENV=development npm-run-all build serve-dev",
-    "prod": "NODE_ENV=production npm-run-all build serve",
-    "start": "npm run prod"
+    "dev-server": "nodemon ./dist_server/app.js",
+    "server": "node ./dist_server/app.js",
+    "dev": "NODE_ENV=development npm-run-all build dev-server",
+    "prod": "NODE_ENV=production npm-run-all build server",
+    "start": "npm run server"
   },
   "repository": {
     "type": "git",
