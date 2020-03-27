@@ -6,7 +6,9 @@ const PORT = process.env.PORT || 5000;
 const app = express();
 
 app.use(cors());
-app.use('/api', routes);
+app.use('/', routes);   
+
+// app.use('/api', routes);
 
 // Client app routes redirection
 // app.use(express.static(__dirname + '/public/'));
