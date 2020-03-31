@@ -9,8 +9,7 @@ var routes = require('./router/api/routes');
 var PORT = process.env.PORT || 5000;
 var app = express();
 app.use(cors());
-app.use('/api', routes); // Client app routes redirection
-
+app.use('/api', routes);
 app.use(express.static(__dirname + '/public/'));
 app.get(/.*/, (request, response) => {
   response.sendFile(__dirname, 'public/index.html');
