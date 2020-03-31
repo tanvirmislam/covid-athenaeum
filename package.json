@@ -7,12 +7,9 @@
     "transpile": "babel ./server -d dist_server",
     "clean": "rimraf dist_server",
     "build": "npm-run-all clean transpile",
-    "dev-server": "nodemon dist_server/app.js",
-    "server": "node dist_server/app.js",
-    "dev": "NODE_ENV=development npm-run-all build dev-server",
-    "prod": "NODE_ENV=production npm-run-all build server",
+    "dev": "NODE_ENV=production nodemon server/app.js",
     "build-prod": "NODE_ENV=production npm-run-all build && cd client-app && npm run generate && cd ..",
-    "start": "npm run server"
+    "start": "node dist_server/app.js"
   },
   "repository": {
     "type": "git",
