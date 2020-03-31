@@ -10,19 +10,23 @@ var express = require('express');
 
 var router = express.Router(); // Get Posts
 
-router.get('/covid/global/:status', /*#__PURE__*/function () {
+router.get('/global/:status', /*#__PURE__*/function () {
   var _ref = _asyncToGenerator(function* (request, response) {
     try {
-      var client = yield (0, _dbaccess.getCollectionClient)(request.path);
+      var collection = yield (0, _dbaccess.getCollectionClient)(request.path);
 
-      if (client === undefined) {
+      if (collection === undefined) {
         var error = {
-          error: 'Invalid global endpoint',
-          accepted: ['/covid/global/confirmed', '/covid/global/deaths', '/covid/global/recovered']
+          error: 'Invalid global status endpoint',
+          accepted: ['/global/confirmed', '/global/deaths', '/global/recovered']
         };
         response.send(JSON.stringify(error));
       } else {
-        response.send((yield client.find({}).toArray()));
+        response.send((yield collection.find({}, {
+          projection: {
+            _id: 0
+          }
+        }).toArray()));
       }
     } catch (err) {
       response.send(err);

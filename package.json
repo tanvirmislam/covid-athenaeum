@@ -11,6 +11,7 @@
     "server": "node ./dist_server/app.js",
     "dev": "NODE_ENV=development npm-run-all build dev-server",
     "prod": "NODE_ENV=production npm-run-all build server",
+    "build-prod": "NODE_ENV=production npm-run-all build && cd client-app && npm run generate && cd ..",
     "start": "npm run server"
   },
   "repository": {

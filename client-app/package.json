@@ -1,0 +1,32 @@
+{
+  "name": "covid-athenaeum",
+  "version": "1.0.0",
+  "description": "Client view of the covid-athenaeum application",
+  "author": "Tanvir",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore ."
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.9.6",
+    "d3": "^5.15.0",
+    "nuxt": "^2.0.0",
+    "topojson-client": "^3.1.0",
+    "versor": "^0.1.2",
+    "vuex-persistedstate": "^3.0.1"
+  },
+  "devDependencies": {
+    "@nuxtjs/eslint-config": "^2.0.0",
+    "@nuxtjs/eslint-module": "^1.0.0",
+    "@nuxtjs/vuetify": "^1.0.0",
+    "babel-eslint": "^10.0.1",
+    "babel-minify-webpack-plugin": "^0.3.1",
+    "eslint": "^6.1.0",
+    "eslint-plugin-nuxt": ">=0.4.2",
+    "terser-webpack-plugin": "^2.3.5"
+  }
+}

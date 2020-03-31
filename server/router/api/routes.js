@@ -4,16 +4,16 @@ const express = require('express');
 const router = express.Router();
 
 // Get Posts
-router.get('/covid/global/:status', async (request, response) => {
+router.get('/global/:status', async (request, response) => {
     try {
-        const client = await getCollectionClient(request.path);
+        const collection = await getCollectionClient(request.path);
         
-        if (client === undefined) {
-            let error = { error: 'Invalid global endpoint', accepted: ['/covid/global/confirmed', '/covid/global/deaths', '/covid/global/recovered'] };
+        if (collection === undefined) {
+            let error = { error: 'Invalid global status endpoint', accepted: ['/global/confirmed', '/global/deaths', '/global/recovered'] };
             response.send(JSON.stringify(error));
         }
         else {
-            response.send(await client.find({}).toArray());
+            response.send(await collection.find({}, {projection:{ _id: 0 }}).toArray());
         }
     }
     catch(err) {

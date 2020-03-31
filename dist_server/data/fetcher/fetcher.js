@@ -5,19 +5,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = fetch;
 
+var _config = _interopRequireDefault(require("../config"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var downloadURLs = {
-  "global_confirmed": "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv",
-  "global_deaths": "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",
-  "global_recovered": "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv",
-  "usa_total": "https://raw.githubusercontent.com/COVID19Tracking/covid-tracking-data/master/data/us_current.csv",
-  "usa_daily": "https://raw.githubusercontent.com/COVID19Tracking/covid-tracking-data/master/data/us_daily.csv",
-  "usa_states": "https://raw.githubusercontent.com/COVID19Tracking/covid-tracking-data/master/data/states_current.csv",
-  "usa_states_info_portals": "https://raw.githubusercontent.com/COVID19Tracking/covid-tracking-data/master/data/states_info.csv"
-};
+var downloadURLs = (0, _config.default)().collectionToRawDataURL;
 
 var fs = require('fs');
 
