@@ -243,8 +243,9 @@ export default {
         .on('drag', this.onDrag)
         .on('end', this.onDragEnd)
       )
-      .call(d3.zoom)
-      .on('wheel.zoom', this.onZoom)
+      .call(d3.zoom()
+        .on('zoom', this.onZoom)
+      )
 
     console.log('Setting draw loop timer')
     this.isRotating = true
