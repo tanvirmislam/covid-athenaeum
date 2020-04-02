@@ -76,6 +76,7 @@ export default {
 
       selectedCountry: undefined,
       dragSensitivity: 75,
+      zoomSensitivity: 0.1,
       nextUniqueColorSeed: 1
     }
   },
@@ -239,9 +240,8 @@ export default {
         .on('drag', this.onDrag)
         .on('end', this.onDragEnd)
       )
-      .call(d3.zoom()
-        .on('zoom', this.onZoom)
-      )
+      .call(d3.zoom)
+      .on('wheel.zoom', this.onZoom)
 
     console.log('Setting draw loop timer')
     this.isRotating = true
@@ -332,10 +332,11 @@ export default {
     },
 
     onZoom () {
-      if (d3.event.transform.k > 0.3) {
-        this.scale = this.radius * d3.event.transform.k
+      d3.event.preventDefault()
+      if (d3.event.wheelDeltaY > 0) {
+        this.scale = Math.min(10000, this.scale * (1 + this.zoomSensitivity))
       } else {
-        d3.event.transform.k = 0.3
+        this.scale = Math.max(60, this.scale * (1 - this.zoomSensitivity))
       }
     },
 
