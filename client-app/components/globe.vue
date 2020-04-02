@@ -235,6 +235,7 @@ export default {
     this.canvas
       .on('mousemove', this.selectCountry)
       .on('touchstart', this.selectCountry)
+      .on('touchmove', this.onTouchMove)
       .call(d3.drag()
         .on('start', this.onDragStart)
         .on('drag', this.onDrag)
@@ -338,6 +339,11 @@ export default {
       } else {
         this.scale = Math.max(60, this.scale * (1 - this.zoomSensitivity))
       }
+    },
+
+    onTouchMove () {
+      const touches = d3.touches(d3.event.target)
+      console.log(touches)
     },
 
     selectCountry () {
