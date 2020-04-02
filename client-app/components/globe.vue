@@ -368,14 +368,6 @@ export default {
       }
     },
 
-    zoomIn () {
-      this.scale = Math.min(10000, this.scale * (1 + this.zoomSensitivity))
-    },
-
-    zoomOut () {
-      this.scale = Math.max(60, this.scale * (1 - this.zoomSensitivity))
-    },
-
     getDistanceBetweenTwoPoints (points) {
       return Math.sqrt(((points[0][0] - points[1][0]) ** 2) + ((points[0][1] - points[1][1]) ** 2))
     },
@@ -387,9 +379,9 @@ export default {
         if (currentPinchDistance === this.lastPinchDistance) {
           return
         } else if (currentPinchDistance > this.lastPinchDistance) {
-          this.zoomIn()
+          this.scale = Math.min(10000, this.scale * (1 + this.zoomSensitivity))
         } else {
-          this.zoomOut()
+          this.scale = Math.max(60, this.scale * (1 - this.zoomSensitivity))
         }
       }
 
@@ -402,12 +394,7 @@ export default {
     },
 
     onZoom () {
-      d3.event.preventDefault()
-      if (d3.event.wheelDeltaY > 0) {
-        this.zoomIn()
-      } else {
-        this.zoomOut()
-      }
+      this.scale = this.radius * d3.event.transform.k
     },
 
     onDragStart () {
@@ -452,7 +439,7 @@ export default {
       this.context.stroke()
 
       // Draw countries
-      this.context.lineWidth = 0.5
+      this.context.lineWidth = 0.35
       this.context.fillStyle = this.colors.land
 
       this.context.beginPath()
