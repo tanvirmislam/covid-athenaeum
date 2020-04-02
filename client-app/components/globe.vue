@@ -70,13 +70,17 @@ export default {
 
       autoRotationDegPerSec: 5,
       isRotating: false,
+
       drawLoop: undefined,
       lastDrawLoopCallTime: undefined,
       isBeingDrawn: false,
 
       selectedCountry: undefined,
+      lastPinchDistance: undefined,
       dragSensitivity: 75,
       zoomSensitivity: 0.1,
+      isBeingDragged: false,
+
       nextUniqueColorSeed: 1
     }
   },
@@ -233,9 +237,7 @@ export default {
 
     console.log('Attaching event listener to canvas')
     this.canvas
-      .on('mousemove', this.selectCountry)
-      .on('touchstart', this.selectCountry)
-      .on('touchmove', this.onTouchMove)
+      .on('mousemove', this.onMouseMove)
       .call(d3.drag()
         .on('start', this.onDragStart)
         .on('drag', this.onDrag)
@@ -292,6 +294,23 @@ export default {
       )
     },
 
+    getUniqueRGBColor () {
+      const rgbColor = []
+
+      if (this.nextUniqueColorSeed > 16777214) {
+        this.nextUniqueColorSeed = 1
+      }
+
+      rgbColor.push(this.nextUniqueColorSeed & 0xFF)
+      rgbColor.push((this.nextUniqueColorSeed & 0xFF00) >> 8)
+      rgbColor.push((this.nextUniqueColorSeed & 0xFF0000) >> 16)
+
+      this.nextUniqueColorSeed += 5
+
+      const colorStr = 'rgb(' + rgbColor.join(',') + ')'
+      return colorStr
+    },
+
     setupEquirectangularKeys () {
       let i = this.worldCountries.features.length
 
@@ -308,47 +327,19 @@ export default {
       }
     },
 
+    getCountryFromImageData (imageData) {
+      const rgbData = imageData.data
+      const colorKey = 'rgb(' + rgbData[0] + ',' + rgbData[1] + ',' + rgbData[2] + ')'
+      return this.colorToCountry[colorKey]
+    },
+
     configureInitialProjection () {
       this.projection.scale(this.scale)
       this.projection.rotate([this.rotations.yaw, this.rotations.pitch, this.rotations.roll])
     },
 
-    onDragStart () {
-      this.isRotating = !this.isRotating
-    },
-
-    onDrag () {
-      const rotate = this.projection.rotate()
-      const k = this.dragSensitivity / this.projection.scale()
-
-      this.rotations = {
-        yaw: rotate[0] + d3.event.dx * k,
-        pitch: rotate[1] - d3.event.dy * k,
-        roll: this.rotations.roll
-      }
-    },
-
-    onDragEnd () {
-      this.isRotating = !this.isRotating
-    },
-
-    onZoom () {
-      d3.event.preventDefault()
-      if (d3.event.wheelDeltaY > 0) {
-        this.scale = Math.min(10000, this.scale * (1 + this.zoomSensitivity))
-      } else {
-        this.scale = Math.max(60, this.scale * (1 - this.zoomSensitivity))
-      }
-    },
-
-    onTouchMove () {
-      const touches = d3.touches(d3.event.target)
-      console.log(touches)
-    },
-
-    selectCountry () {
-      const mousePos = d3.mouse(d3.event.target)
-      const latLong = this.projection.invert(mousePos)
+    selectCountryFromPosition (pos) {
+      const latLong = this.projection.invert(pos)
       const equirectangularPos = this.equirectangularProjection(latLong)
 
       if (equirectangularPos[0] > -1) {
@@ -362,6 +353,88 @@ export default {
           const countryInfo = this.countryList.find(c => parseInt(c.id) === parseInt(this.selectedCountry.id))
           this.selectedCountry.name = (countryInfo && countryInfo.name) || ''
         }
+      }
+    },
+
+    rotateFromDragEvent (event) {
+      const rotate = this.projection.rotate()
+      const k = this.dragSensitivity / this.projection.scale()
+
+      this.rotations = {
+        yaw: rotate[0] + event.dx * k,
+        pitch: rotate[1] - event.dy * k,
+        roll: this.rotations.roll
+      }
+    },
+
+    zoomIn () {
+      this.scale = Math.min(10000, this.scale * (1 + this.zoomSensitivity))
+    },
+
+    zoomOut () {
+      this.scale = Math.max(60, this.scale * (1 - this.zoomSensitivity))
+    },
+
+    getDistanceBetweenTwoPoints (points) {
+      return Math.sqrt(((points[0][0] - points[1][0]) ** 2) + ((points[0][1] - points[1][1]) ** 2))
+    },
+
+    scaleFromPinchTouches (touches) {
+      if (this.lastPinchDistance) {
+        const currentPinchDistance = this.getDistanceBetweenTwoPoints(touches)
+
+        if (currentPinchDistance === this.lastPinchDistance) {
+          return
+        } else if (currentPinchDistance > this.lastPinchDistance) {
+          this.zoomIn()
+        } else {
+          this.zoomOut()
+        }
+      }
+
+      this.lastPinchDistance = this.getDistanceBetweenTwoPoints(touches)
+    },
+
+    onMouseMove () {
+      const mousePos = d3.mouse(d3.event.target)
+      this.selectCountryFromPosition(mousePos)
+    },
+
+    onZoom () {
+      d3.event.preventDefault()
+      if (d3.event.wheelDeltaY > 0) {
+        this.zoomIn()
+      } else {
+        this.zoomOut()
+      }
+    },
+
+    onDragStart () {
+      const touches = d3.touches(d3.event.sourceEvent.target)
+
+      if (touches.length < 2) {
+        this.isRotating = !this.isRotating
+        this.isBeingDragged = true
+      } else if (touches.length === 2) {
+        this.lastPinchDistance = this.getDistanceBetweenTwoPoints(touches)
+      }
+    },
+
+    onDrag () {
+      const touches = d3.touches(d3.event.sourceEvent.target)
+
+      if (touches.length < 2) {
+        this.rotateFromDragEvent(d3.event)
+        this.isBeingDragged = true
+      } else if (touches.length === 2) {
+        this.scaleFromPinchTouches(touches)
+      }
+    },
+
+    onDragEnd () {
+      if (this.isBeingDragged) {
+        this.isRotating = !this.isRotating
+        this.isBeingDragged = false
       }
     },
 
@@ -444,29 +517,6 @@ export default {
 
       this.lastDrawLoopCallTime = now
       this.isDrawing = false
-    },
-
-    getUniqueRGBColor () {
-      const rgbColor = []
-
-      if (this.nextUniqueColorSeed > 16777214) {
-        this.nextUniqueColorSeed = 1
-      }
-
-      rgbColor.push(this.nextUniqueColorSeed & 0xFF)
-      rgbColor.push((this.nextUniqueColorSeed & 0xFF00) >> 8)
-      rgbColor.push((this.nextUniqueColorSeed & 0xFF0000) >> 16)
-
-      this.nextUniqueColorSeed += 5
-
-      const colorStr = 'rgb(' + rgbColor.join(',') + ')'
-      return colorStr
-    },
-
-    getCountryFromImageData (imageData) {
-      const rgbData = imageData.data
-      const colorKey = 'rgb(' + rgbData[0] + ',' + rgbData[1] + ',' + rgbData[2] + ')'
-      return this.colorToCountry[colorKey]
     }
   }
 }
