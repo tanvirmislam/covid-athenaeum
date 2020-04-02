@@ -32,6 +32,7 @@
     "babel-minify-webpack-plugin": "^0.3.1",
     "eslint": "^6.1.0",
     "eslint-plugin-nuxt": ">=0.4.2",
-    "terser-webpack-plugin": "^2.3.5"
+    "terser-webpack-plugin": "^2.3.5",
+    "kind-of": "^6.0.3"
   }
 }
