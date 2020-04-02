@@ -3,7 +3,8 @@
     <v-row align="center" justify="center">
       <v-col align="center">
         <div v-if="!isDataFetched">
-          Fetching Data ...
+          Fetching Data
+          <span class="ml-2"> <font-awesome-icon :icon="['fas', 'spinner']" pulse /> </span>
         </div>
       </v-col>
     </v-row>
@@ -48,8 +49,11 @@ export default {
       dimensions: {
         screenWidth: undefined,
         screenHeight: undefined,
-        canvasSquareSide: 400
+        canvasSquareSide: undefined,
+        canvasMargin: 50
       },
+
+      scale: undefined,
 
       rotations: {
         yaw: 0,
@@ -65,9 +69,9 @@ export default {
       },
 
       autoRotationDegPerSec: 5,
+      isRotating: false,
       drawLoop: undefined,
       lastDrawLoopCallTime: undefined,
-      isRotating: false,
       isBeingDrawn: false,
 
       selectedCountry: undefined,
@@ -152,13 +156,48 @@ export default {
   },
 
   watch: {
+    width () {
+      if (this.isMounted) {
+        this.canvas.attr('width', this.width)
+        this.equirectangularCanvas.attr('width', this.width)
+        this.setupEquirectangularKeys()
+      }
+    },
+
+    height () {
+      if (this.isMounted) {
+        this.canvas.attr('height', this.height)
+        this.equirectangularCanvas.attr('height', this.height)
+        this.setupEquirectangularKeys()
+      }
+    },
+
+    radius () {
+      this.scale = this.radius
+    },
+
+    scale () {
+      this.projection.scale(this.scale)
+    },
+
     rotations () {
       this.projection.rotate([this.rotations.yaw, this.rotations.pitch, this.rotations.roll])
     }
   },
 
+  beforeMount () {
+    window.addEventListener('resize', this.adjustDimensions)
+  },
+
+  beforeDestroy () {
+    window.removeEventListener('resize', this.adjustDimensions)
+  },
+
   async mounted () {
     console.log('DOM mounted')
+
+    console.log('Ajusting dimensions')
+    this.adjustDimensions()
 
     console.log('Fetching data')
     await this.fetchData()
@@ -172,6 +211,7 @@ export default {
     this.canvas = d3
       .select('#canvasContainer')
       .append('canvas')
+      .attr('id', 'canvas')
       .attr('width', this.width)
       .attr('height', this.height)
 
@@ -185,22 +225,10 @@ export default {
     this.equirectangularContext = this.equirectangularCanvas.node().getContext('2d')
     this.isMounted = true
 
+    console.log('Setting up initial projection configurations')
     this.equirectangularCanvas.remove()
+    this.setupEquirectangularKeys()
     this.configureInitialProjection()
-
-    console.log('Drawing equirectangular projection')
-    let i = this.worldCountries.features.length
-    while (i--) {
-      const country = this.worldCountries.features[i]
-      const color = this.getUniqueRGBColor()
-      this.colorToCountry[color] = country
-
-      // Set equirectangular projection's rgb color
-      this.equirectangularContext.beginPath()
-      this.equirectangularPath(country)
-      this.equirectangularContext.fillStyle = color
-      this.equirectangularContext.fill()
-    }
 
     console.log('Attaching event listener to canvas')
     this.canvas
@@ -210,6 +238,9 @@ export default {
         .on('start', this.onDragStart)
         .on('drag', this.onDrag)
         .on('end', this.onDragEnd)
+      )
+      .call(d3.zoom()
+        .on('zoom', this.onZoom)
       )
 
     console.log('Setting draw loop timer')
@@ -245,47 +276,97 @@ export default {
       }
     },
 
+    adjustDimensions () {
+      console.log('Adjusting dimensions')
+      this.dimensions.screenWidth = document.documentElement.clientWidth
+      this.dimensions.screenHeight = document.documentElement.clientHeight
+
+      if (this.isMounted) {
+        this.context.clearRect(0, 0, this.width, this.height)
+      }
+
+      this.dimensions.canvasSquareSide = Math.min(
+        (this.dimensions.screenWidth * 0.95) - this.dimensions.canvasMargin,
+        (this.dimensions.screenHeight * 0.7) - this.dimensions.canvasMargin
+      )
+    },
+
+    setupEquirectangularKeys () {
+      let i = this.worldCountries.features.length
+
+      while (i--) {
+        const country = this.worldCountries.features[i]
+        const color = this.getUniqueRGBColor()
+        this.colorToCountry[color] = country
+
+        // Set equirectangular projection's rgb color
+        this.equirectangularContext.beginPath()
+        this.equirectangularPath(country)
+        this.equirectangularContext.fillStyle = color
+        this.equirectangularContext.fill()
+      }
+    },
+
     configureInitialProjection () {
-      this.projection.scale(this.radius)
+      this.projection.scale(this.scale)
       this.projection.rotate([this.rotations.yaw, this.rotations.pitch, this.rotations.roll])
     },
 
-    draw (elapsed) {
-      if (this.isDrawing) {
-        return
+    onDragStart () {
+      this.isRotating = !this.isRotating
+    },
+
+    onDrag () {
+      const rotate = this.projection.rotate()
+      const k = this.dragSensitivity / this.projection.scale()
+
+      this.rotations = {
+        yaw: rotate[0] + d3.event.dx * k,
+        pitch: rotate[1] - d3.event.dy * k,
+        roll: this.rotations.roll
       }
+    },
 
-      this.isDrawing = true
-      const now = d3.now()
-      const diff = now - this.lastDrawLoopCallTime
+    onDragEnd () {
+      this.isRotating = !this.isRotating
+    },
 
-      if (diff < elapsed) {
-        if (this.isRotating) {
-          this.rotations = {
-            yaw: this.rotations.yaw += diff * this.autoRotationDegPerMilliSec,
-            pitch: this.rotations.pitch,
-            roll: this.rotations.roll
-          }
-        }
+    onZoom () {
+      if (d3.event.transform.k > 0.3) {
+        this.scale = this.radius * d3.event.transform.k
+      } else {
+        d3.event.transform.k = 0.3
+      }
+    },
 
-        if (this.isMounted && this.isDataFetched) {
-          this.render()
+    selectCountry () {
+      const mousePos = d3.mouse(d3.event.target)
+      const latLong = this.projection.invert(mousePos)
+      const equirectangularPos = this.equirectangularProjection(latLong)
+
+      if (equirectangularPos[0] > -1) {
+        const imageData = this.equirectangularContext.getImageData(equirectangularPos[0], equirectangularPos[1], 1, 1)
+        const country = this.getCountryFromImageData(imageData)
+
+        if (country === undefined) {
+          this.selectedCountry = undefined
+        } else if (this.selectedCountry === undefined || this.selectedCountry.id !== country.id) {
+          this.selectedCountry = country
+          const countryInfo = this.countryList.find(c => parseInt(c.id) === parseInt(this.selectedCountry.id))
+          this.selectedCountry.name = (countryInfo && countryInfo.name) || ''
         }
       }
-
-      this.lastDrawLoopCallTime = now
-      this.isDrawing = false
     },
 
     render () {
       this.context.clearRect(0, 0, this.width, this.height)
 
-      // Draw circle
+      // Draw water (Sphere)
       this.context.lineWidth = 1.5
       this.context.fillStyle = this.colors.water
 
       this.context.beginPath()
-      this.context.arc(this.width / 2, this.height / 2, this.radius, 0, 2 * Math.PI)
+      this.path({ type: 'Sphere' })
       this.context.fill()
       this.context.stroke()
 
@@ -331,63 +412,54 @@ export default {
       this.path.pointRadius(defaultPointRadiusFunction)
     },
 
-    selectCountry () {
-      const mousePos = d3.mouse(d3.event.target)
-      const latLong = this.projection.invert(mousePos)
-      const equirectangularPos = this.equirectangularProjection(latLong)
+    draw (elapsed) {
+      if (this.isDrawing) {
+        return
+      }
 
-      if (equirectangularPos[0] > -1) {
-        const imageData = this.equirectangularContext.getImageData(equirectangularPos[0], equirectangularPos[1], 1, 1)
-        const country = this.getCountryFromImageData(imageData)
+      this.isDrawing = true
+      const now = d3.now()
+      const diff = now - this.lastDrawLoopCallTime
 
-        if (country === undefined) {
-          this.selectedCountry = undefined
-        } else if (this.selectedCountry === undefined || this.selectedCountry.id !== country.id) {
-          this.selectedCountry = country
-          const countryInfo = this.countryList.find(c => parseInt(c.id) === parseInt(this.selectedCountry.id))
-          this.selectedCountry.name = (countryInfo && countryInfo.name) || ''
+      if (diff < elapsed) {
+        if (this.isRotating) {
+          this.rotations = {
+            yaw: this.rotations.yaw += diff * this.autoRotationDegPerMilliSec,
+            pitch: this.rotations.pitch,
+            roll: this.rotations.roll
+          }
+        }
+
+        if (this.isMounted && this.isDataFetched) {
+          this.render()
         }
       }
+
+      this.lastDrawLoopCallTime = now
+      this.isDrawing = false
     },
 
-    onDragStart () {
-      this.isRotating = false
-    },
+    getUniqueRGBColor () {
+      const rgbColor = []
 
-    onDrag () {
-      const rotate = this.projection.rotate()
-      const k = this.dragSensitivity / this.projection.scale()
-
-      this.rotations = {
-        yaw: rotate[0] + d3.event.dx * k,
-        pitch: rotate[1] - d3.event.dy * k,
-        roll: this.rotations.roll
+      if (this.nextUniqueColorSeed > 16777214) {
+        this.nextUniqueColorSeed = 1
       }
-    },
 
-    onDragEnd () {
-      this.isRotating = true
+      rgbColor.push(this.nextUniqueColorSeed & 0xFF)
+      rgbColor.push((this.nextUniqueColorSeed & 0xFF00) >> 8)
+      rgbColor.push((this.nextUniqueColorSeed & 0xFF0000) >> 16)
+
+      this.nextUniqueColorSeed += 5
+
+      const colorStr = 'rgb(' + rgbColor.join(',') + ')'
+      return colorStr
     },
 
     getCountryFromImageData (imageData) {
       const rgbData = imageData.data
       const colorKey = 'rgb(' + rgbData[0] + ',' + rgbData[1] + ',' + rgbData[2] + ')'
       return this.colorToCountry[colorKey]
-    },
-
-    getUniqueRGBColor () {
-      const rgbColor = []
-
-      if (this.nextUniqueColorSeed < 16777215) {
-        rgbColor.push(this.nextUniqueColorSeed & 0xFF)
-        rgbColor.push((this.nextUniqueColorSeed & 0xFF00) >> 8)
-        rgbColor.push((this.nextUniqueColorSeed & 0xFF0000) >> 16)
-
-        this.nextUniqueColorSeed += 5
-      }
-
-      const colorStr = 'rgb(' + rgbColor.join(',') + ')'
-      return colorStr
     }
   }
 }

@@ -20,19 +20,19 @@ var util = require('util');
 var exec = util.promisify(require('child_process').exec);
 var dbConfig = (0, _config.default)();
 
-function getExecCommand(collection) {
+function getExecCommand(host, db, collection, user, password) {
   var filepath = path.join(__dirname, '../../../', "raw_data/".concat(collection, ".csv"));
-  return "mongoimport -h ".concat(dbConfig['host'], " -d ").concat(dbConfig['db'], " -c ").concat(collection, " -u ").concat(dbConfig['user'], " -p ").concat(dbConfig['password'], " --file ").concat(filepath, " --type csv --headerline --drop");
+  return "mongoimport -h ".concat(host, " -d ").concat(db, " -c ").concat(collection, " -u ").concat(user, " -p ").concat(password, " --file ").concat(filepath, " --type csv --headerline --drop");
 }
 
-function load() {
+function load(_x, _x2) {
   return _load.apply(this, arguments);
 }
 
 function _load() {
-  _load = _asyncToGenerator(function* () {
-    for (var [endpoint, collection] of Object.entries(dbConfig['endpointToCollection'])) {
-      var cmd = getExecCommand(collection);
+  _load = _asyncToGenerator(function* (user, password) {
+    for (var collection of Object.values(dbConfig.endpointToCollection)) {
+      var cmd = getExecCommand(dbConfig.host, dbConfig.db, collection, user, password);
       var {
         stdout,
         stderr

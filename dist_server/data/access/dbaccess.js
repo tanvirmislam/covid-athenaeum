@@ -17,7 +17,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 var config = (0, _config.default)();
-var singletonClient = undefined;
+var singletonClient;
 
 function getDbClient() {
   return _getDbClient.apply(this, arguments);
@@ -25,7 +25,7 @@ function getDbClient() {
 
 function _getDbClient() {
   _getDbClient = _asyncToGenerator(function* () {
-    if (singletonClient === undefined) {
+    if (!singletonClient) {
       singletonClient = new _client.default(config);
     }
 
@@ -49,11 +49,11 @@ function getCollectionClient(_x) {
 
 function _getCollectionClient() {
   _getCollectionClient = _asyncToGenerator(function* (endpoint) {
-    if (config['endpointToCollection'][endpoint] === undefined) {
+    if (config.endpointToCollection[endpoint] === undefined) {
       return undefined;
     }
 
-    var collectionName = config['endpointToCollection'][endpoint];
+    var collectionName = config.endpointToCollection[endpoint];
     var dbclient = yield getDbClient();
     return dbclient.collection(collectionName);
   });

@@ -31,11 +31,11 @@ class Client {
 
     return _asyncToGenerator(function* () {
       try {
-        var client = yield mongodb.MongoClient.connect(_this._config['url'], {
+        var client = yield mongodb.MongoClient.connect(_this._config.url, {
           useNewUrlParser: true,
           useUnifiedTopology: true
         });
-        _this._dbclient = client.db(_this._config['db']);
+        _this._dbclient = client.db(_this._config.db);
         _this._isConnected = true;
       } catch (err) {
         console.log(err);

@@ -4,9 +4,12 @@
   "description": "Information hub for COVID-19",
   "main": "app.js",
   "scripts": {
+    "lint": "eslint ./server/",
     "transpile": "babel ./server -d dist_server",
     "clean": "rimraf dist_server",
-    "build-prod": "npm-run-all clean transpile && cd client-app && npm run generate && cd ..",
+    "build-server": "npm-run-all lint clean transpile",
+    "build-client": "cd client-app && npm run generate && cd ..",
+    "build-prod": "npm-run-all build-server build-client",
     "dev": "NODE_ENV=development nodemon dist_server/app.js",
     "start": "node dist_server/app.js"
   },
@@ -44,6 +47,13 @@
     "@babel/node": "^7.8.7",
     "@babel/preset-env": "^7.9.0",
     "@babel/register": "^7.9.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
     "nodemon": "^2.0.2"
   }
 }
