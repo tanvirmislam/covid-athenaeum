@@ -231,21 +231,21 @@ export default {
     this.isMounted = true
 
     console.log('Setting up initial projection configurations')
-    this.equirectangularCanvas.remove()
+    // this.equirectangularCanvas.remove()
     this.setupEquirectangularKeys()
     this.configureInitialProjection()
 
     console.log('Attaching event listener to canvas')
     this.canvas
       .on('mousemove', this.onMouseMove)
-      // .call(d3.drag()
-      //   .on('start', this.onDragStart)
-      //   .on('drag', this.onDrag)
-      //   .on('end', this.onDragEnd)
-      // )
-      // .call(d3.zoom()
-      //   .on('zoom', this.onZoom)
-      // )
+      .call(d3.drag()
+        .on('start', this.onDragStart)
+        .on('drag', this.onDrag)
+        .on('end', this.onDragEnd)
+      )
+      .call(d3.zoom()
+        .on('zoom', this.onZoom)
+      )
 
     console.log('Setting draw loop timer')
     this.isRotating = true
