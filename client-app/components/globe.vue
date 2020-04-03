@@ -14,7 +14,7 @@
     <v-row align="center" justify="center">
       <v-col align="center">
         <div v-if="selectedCountry !== undefined">
-          {{ selectedCountry.name }}
+          {{ selectedCountry.properties.name }}
         </div>
       </v-col>
     </v-row>
@@ -29,15 +29,13 @@ export default {
   data () {
     return {
       earthquakeDataURL: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2020-01-01&endtime=2020-01-02',
-      worldDataURL: 'https://unpkg.com/world-atlas@1.1.4/world/110m.json',
-      countryDataURL: 'https://gist.githubusercontent.com/mbostock/4090846/raw/07e73f3c2d21558489604a0bc434b3a5cf41a867/world-country-names.tsv',
+      worldDataURL: 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
       isDataFetched: false,
 
       earthquakes: undefined,
       world: undefined,
       worldLand: undefined,
       worldCountries: undefined,
-      countryList: undefined,
 
       canvas: undefined,
       context: undefined,
@@ -161,6 +159,14 @@ export default {
   },
 
   watch: {
+    isDataFetched () {
+      if (this.isDataFetched) {
+        console.log(this.earthquakes)
+        console.log(this.world)
+        this.setupEquirectangularKeys()
+      }
+    },
+
     width () {
       if (this.isMounted) {
         this.canvas.attr('width', this.width)
@@ -198,19 +204,11 @@ export default {
     window.removeEventListener('resize', this.adjustDimensions)
   },
 
-  async mounted () {
+  mounted () {
     console.log('DOM mounted')
 
     console.log('Ajusting dimensions')
     this.adjustDimensions()
-
-    console.log('Fetching data')
-    await this.fetchData()
-    this.isDataFetched = true
-
-    console.log(this.earthquakes)
-    console.log(this.world)
-    console.log(this.countryList)
 
     console.log('Mounting canvas elements')
     this.canvas = d3
@@ -231,8 +229,8 @@ export default {
     this.isMounted = true
 
     console.log('Setting up initial projection configurations')
-    // this.equirectangularCanvas.remove()
-    this.setupEquirectangularKeys()
+    this.equirectangularCanvas.remove()
+    // this.setupEquirectangularKeys()
     this.configureInitialProjection()
 
     console.log('Attaching event listener to canvas')
@@ -251,32 +249,34 @@ export default {
     this.isRotating = true
     this.lastDrawLoopCallTime = d3.now()
     this.drawLoop = d3.timer(this.draw)
+
+    console.log('Fetching data')
+    this.fetchData()
   },
 
   methods: {
     async fetchData () {
       try {
+        this.isDataFetched = false
+
         const earthquakeFetchRequest = this.$axios.get(this.earthquakeDataURL)
         const worldMapFetchRequest = this.$axios.get(this.worldDataURL)
-        const countryListFetchRequest = this.$axios.get(this.countryDataURL)
 
-        const [earthquakeFetchResponse, worldMapFetchResponse, countryListFetchResponse] = await Promise.all([earthquakeFetchRequest, worldMapFetchRequest, countryListFetchRequest])
+        const [earthquakeFetchResponse, worldMapFetchResponse] = await Promise.all([earthquakeFetchRequest, worldMapFetchRequest])
 
         this.earthquakes = earthquakeFetchResponse.data
-
         this.world = worldMapFetchResponse.data
+
         this.worldLand = topojson.feature(this.world, this.world.objects.land)
         this.worldCountries = topojson.feature(this.world, this.world.objects.countries)
 
-        this.countryList = this.tsv2json(countryListFetchResponse.data)
+        this.isDataFetched = true
       } catch (error) {
         this.earthquake = undefined
-
         this.world = undefined
         this.worldLand = undefined
         this.worldCountries = undefined
-
-        this.countryList = undefined
+        this.isDataFetched = false
       }
     },
 
@@ -313,6 +313,10 @@ export default {
     },
 
     setupEquirectangularKeys () {
+      if (!this.isMounted || !this.isDataFetched) {
+        return
+      }
+
       let i = this.worldCountries.features.length
 
       while (i--) {
@@ -351,8 +355,6 @@ export default {
           this.selectedCountry = undefined
         } else if (this.selectedCountry === undefined || this.selectedCountry.id !== country.id) {
           this.selectedCountry = country
-          const countryInfo = this.countryList.find(c => parseInt(c.id) === parseInt(this.selectedCountry.id))
-          this.selectedCountry.name = (countryInfo && countryInfo.name) || ''
         }
       }
     },
@@ -481,11 +483,11 @@ export default {
     },
 
     draw (elapsed) {
-      if (this.isDrawing) {
+      if (this.isBeingDrawn || !this.isMounted || !this.isDataFetched) {
         return
       }
 
-      this.isDrawing = true
+      this.isBeingDrawn = true
       const now = d3.now()
       const diff = now - this.lastDrawLoopCallTime
 
@@ -498,13 +500,11 @@ export default {
           }
         }
 
-        if (this.isMounted && this.isDataFetched) {
-          this.render()
-        }
+        this.render()
       }
 
       this.lastDrawLoopCallTime = now
-      this.isDrawing = false
+      this.isBeingDrawn = false
     }
   }
 }
