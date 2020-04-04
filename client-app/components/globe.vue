@@ -76,7 +76,7 @@ export default {
       selectedCountry: undefined,
       lastPinchDistance: undefined,
       dragSensitivity: 75,
-      zoomSensitivity: 0.1,
+      pinchZoomSensitivity: 0.08,
       isBeingDragged: false,
 
       nextUniqueColorSeed: 1
@@ -381,9 +381,9 @@ export default {
         if (currentPinchDistance === this.lastPinchDistance) {
           return
         } else if (currentPinchDistance > this.lastPinchDistance) {
-          this.scale = Math.min(10000, this.scale * (1 + this.zoomSensitivity))
+          this.scale = Math.min(10000, this.scale * (1 + this.pinchZoomSensitivity))
         } else {
-          this.scale = Math.max(60, this.scale * (1 - this.zoomSensitivity))
+          this.scale = Math.max(100, this.scale * (1 - this.pinchZoomSensitivity))
         }
       }
 
@@ -415,7 +415,6 @@ export default {
 
       if (touches.length < 2) {
         this.rotateFromDragEvent(d3.event)
-        this.isBeingDragged = true
       } else if (touches.length === 2) {
         this.scaleFromPinchTouches(touches)
       }
@@ -441,7 +440,7 @@ export default {
       this.context.stroke()
 
       // Draw countries
-      this.context.lineWidth = 0.35
+      this.context.lineWidth = 0.3
       this.context.fillStyle = this.colors.land
 
       this.context.beginPath()
