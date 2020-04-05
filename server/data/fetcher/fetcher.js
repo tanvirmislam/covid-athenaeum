@@ -30,7 +30,13 @@ async function downloadFile (filename, url) {
 
 export default async function fetch () {
   for (const [filename, url] of Object.entries(downloadURLs)) {
-    await downloadFile(filename, url)
-    console.log(`Download completed: ${filename}`)
+    try {
+      await downloadFile(filename, url)
+      console.log(`Download completed: ${filename}`)
+    } catch (error) {
+      console.log(error)
+      return false
+    }
   }
+  return true
 }

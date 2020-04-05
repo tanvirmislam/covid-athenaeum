@@ -14,7 +14,8 @@
     <v-row align="center" justify="center">
       <v-col align="center">
         <div v-if="selectedCountry !== undefined">
-          {{ selectedCountry.properties.name }}
+          <span>{{ selectedCountry.properties.name }}</span>
+          <span v-if="selectedCountry.properties.count !== undefined">: {{ selectedCountry.properties.count }}</span>
         </div>
       </v-col>
     </v-row>
@@ -28,14 +29,19 @@ import * as topojson from 'topojson-client'
 export default {
   data () {
     return {
-      earthquakeDataURL: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2020-01-01&endtime=2020-01-02',
       worldDataURL: 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
+      covidDataURLs: {
+        confirmed: 'https://covid-athenaeum.herokuapp.com/api/global/confirmed'
+      },
       isDataFetched: false,
 
-      earthquakes: undefined,
       world: undefined,
       worldLand: undefined,
       worldCountries: undefined,
+      covidConfirmed: undefined,
+      countryToCount: {},
+      minCount: undefined,
+      maxCount: undefined,
 
       canvas: undefined,
       context: undefined,
@@ -60,10 +66,10 @@ export default {
       },
 
       colors: {
-        water: '#5CA8BF',
-        land: '#91755C',
+        landRed: '220',
+        unavailableCountry: '#BDB9B9',
         selectedCountry: '#F2E4E4',
-        earthquake: '#E32929'
+        water: '#5CA8BF'
       },
 
       autoRotationDegPerSec: 5,
@@ -149,11 +155,9 @@ export default {
       }
     },
 
-    earthquakeMagnitudeScale: {
+    countryColorScale: {
       get () {
-        return d3.scaleSqrt()
-          .domain([0, 100])
-          .range([0, 10])
+        return d3.scaleLinear().domain([this.maxCount, this.minCount]).range([0, 180])
       }
     }
   },
@@ -161,9 +165,9 @@ export default {
   watch: {
     isDataFetched () {
       if (this.isDataFetched) {
-        console.log(this.earthquakes)
+        console.log(this.covidConfirmed)
         console.log(this.world)
-        this.setupEquirectangularKeys()
+        this.setupEquirectangularColorKeys()
       }
     },
 
@@ -171,7 +175,7 @@ export default {
       if (this.isMounted) {
         this.canvas.attr('width', this.width)
         this.equirectangularCanvas.attr('width', this.width)
-        this.setupEquirectangularKeys()
+        this.setupEquirectangularColorKeys()
       }
     },
 
@@ -179,7 +183,7 @@ export default {
       if (this.isMounted) {
         this.canvas.attr('height', this.height)
         this.equirectangularCanvas.attr('height', this.height)
-        this.setupEquirectangularKeys()
+        this.setupEquirectangularColorKeys()
       }
     },
 
@@ -230,7 +234,6 @@ export default {
 
     console.log('Setting up initial projection configurations')
     this.equirectangularCanvas.remove()
-    // this.setupEquirectangularKeys()
     this.configureInitialProjection()
 
     console.log('Attaching event listener to canvas')
@@ -251,33 +254,55 @@ export default {
     this.drawLoop = d3.timer(this.draw)
 
     console.log('Fetching data')
-    this.fetchData()
+    this.fetchInitialData()
   },
 
   methods: {
-    async fetchData () {
+    async fetchInitialData () {
       try {
         this.isDataFetched = false
 
-        const earthquakeFetchRequest = this.$axios.get(this.earthquakeDataURL)
         const worldMapFetchRequest = this.$axios.get(this.worldDataURL)
+        const covidConfirmedFetchRequest = this.$axios.get(this.covidDataURLs.confirmed)
 
-        const [earthquakeFetchResponse, worldMapFetchResponse] = await Promise.all([earthquakeFetchRequest, worldMapFetchRequest])
+        const [worldMapFetchResponse, covidConfirmedFetchhResponse] = await Promise.all([worldMapFetchRequest, covidConfirmedFetchRequest])
 
-        this.earthquakes = earthquakeFetchResponse.data
         this.world = worldMapFetchResponse.data
+        this.covidConfirmed = covidConfirmedFetchhResponse.data
 
         this.worldLand = topojson.feature(this.world, this.world.objects.land)
         this.worldCountries = topojson.feature(this.world, this.world.objects.countries)
 
+        this.generateCountryToCountMap(this.covidConfirmed)
+
         this.isDataFetched = true
       } catch (error) {
-        this.earthquake = undefined
         this.world = undefined
         this.worldLand = undefined
         this.worldCountries = undefined
+        this.covidConfirmed = undefined
         this.isDataFetched = false
       }
+    },
+
+    generateCountryToCountMap (covidData) {
+      this.countryToCount = {}
+      this.minCount = undefined
+      this.maxCount = undefined
+
+      covidData.forEach((item) => {
+        const name = item['Country/Region'].toLowerCase()
+        const count = item[Object.keys(item).pop()]
+
+        if (this.countryToCount[name] === undefined) {
+          this.countryToCount[name] = count
+        } else {
+          this.countryToCount[name] += count
+        }
+
+        this.minCount = (this.minCount === undefined) ? count : Math.min(this.minCount, count)
+        this.maxCount = (this.maxCount === undefined) ? count : Math.max(this.maxCount, count)
+      })
     },
 
     adjustDimensions () {
@@ -312,7 +337,7 @@ export default {
       return colorStr
     },
 
-    setupEquirectangularKeys () {
+    setupEquirectangularColorKeys () {
       if (!this.isMounted || !this.isDataFetched) {
         return
       }
@@ -332,7 +357,7 @@ export default {
       }
     },
 
-    getCountryFromImageData (imageData) {
+    getCountryFromEquirectangularImageData (imageData) {
       const rgbData = imageData.data
       const colorKey = 'rgb(' + rgbData[0] + ',' + rgbData[1] + ',' + rgbData[2] + ')'
       return this.colorToCountry[colorKey]
@@ -349,12 +374,18 @@ export default {
 
       if (equirectangularPos[0] > -1) {
         const imageData = this.equirectangularContext.getImageData(equirectangularPos[0], equirectangularPos[1], 1, 1)
-        const country = this.getCountryFromImageData(imageData)
+        const country = this.getCountryFromEquirectangularImageData(imageData)
 
         if (country === undefined) {
           this.selectedCountry = undefined
         } else if (this.selectedCountry === undefined || this.selectedCountry.id !== country.id) {
           this.selectedCountry = country
+          const name = this.selectedCountry.properties.name.toLowerCase()
+          const count = this.countryToCount[name]
+
+          if (count !== undefined) {
+            this.selectedCountry.properties.count = count
+          }
         }
       }
     },
@@ -441,44 +472,32 @@ export default {
 
       // Draw countries
       this.context.lineWidth = 0.3
-      this.context.fillStyle = this.colors.land
+      this.worldCountries.features.forEach((country) => {
+        let color
+        const countryName = country.properties.name.toLowerCase()
+        const count = this.countryToCount[countryName]
 
-      this.context.beginPath()
-      this.path(this.worldCountries)
-      this.context.fill()
-      this.context.stroke()
+        if (count !== undefined) {
+          const scaledColorValue = this.countryColorScale(count)
+          color = `rgb(${this.colors.landRed},${scaledColorValue},${scaledColorValue})`
+        } else {
+          color = this.colors.unavailableCountry
+        }
+
+        this.context.fillStyle = color
+        this.context.beginPath()
+        this.path(country)
+        this.context.fill()
+        this.context.stroke()
+      })
 
       // Draw selected country
       if (this.selectedCountry !== undefined) {
+        this.context.fillStyle = this.colors.selectedCountry
         this.context.beginPath()
         this.path(this.selectedCountry)
-        this.context.fillStyle = this.colors.selectedCountry
         this.context.fill()
       }
-
-      // Draw earthquakes
-      const color = d3.color(this.colors.earthquake)
-      color.opacity = 0.50
-      this.context.fillStyle = color
-
-      const defaultPointRadiusFunction = this.path.pointRadius
-
-      this.path.pointRadius(
-        (quake) => {
-          return this.earthquakeMagnitudeScale(Math.exp(quake.properties.mag))
-        }
-      )
-
-      this.earthquakes.features.forEach(
-        (quake) => {
-          this.context.beginPath()
-          this.path(quake)
-          this.context.fill()
-          this.context.stroke()
-        }
-      )
-
-      this.path.pointRadius(defaultPointRadiusFunction)
     },
 
     draw (elapsed) {

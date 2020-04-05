@@ -55,9 +55,16 @@ function fetch() {
 function _fetch() {
   _fetch = _asyncToGenerator(function* () {
     for (var [filename, url] of Object.entries(downloadURLs)) {
-      yield downloadFile(filename, url);
-      console.log("Download completed: ".concat(filename));
+      try {
+        yield downloadFile(filename, url);
+        console.log("Download completed: ".concat(filename));
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
     }
+
+    return true;
   });
   return _fetch.apply(this, arguments);
 }
