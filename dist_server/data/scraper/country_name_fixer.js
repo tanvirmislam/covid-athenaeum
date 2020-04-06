@@ -33,9 +33,9 @@ var countryRenameMap = {
 var provinceToCountryMap = {
   Greenland: 'Greenland'
 };
-var confirmedDataFilePath = path.join(__dirname, '../../../', 'raw_data/global_confirmed.csv');
-var deathsDataFilePath = path.join(__dirname, '../../../', 'raw_data/global_deaths.csv');
-var recoveredDataFilePath = path.join(__dirname, '../../../', 'raw_data/global_recovered.csv');
+var confirmedDataFilePath = path.join(__dirname, '../../../', 'raw_data/countries_confirmed.csv');
+var deathsDataFilePath = path.join(__dirname, '../../../', 'raw_data/countries_deaths.csv');
+var recoveredDataFilePath = path.join(__dirname, '../../../', 'raw_data/countries_recovered.csv');
 
 function fixNames() {
   return _fixNames.apply(this, arguments);
