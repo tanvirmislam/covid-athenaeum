@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getDbClient = getDbClient;
 exports.getCollectionClient = getCollectionClient;
+exports.getCollectionClientFromEndpoint = getCollectionClientFromEndpoint;
 
 var _config = _interopRequireDefault(require("../config"));
 
@@ -48,7 +49,19 @@ function getCollectionClient(_x) {
 }
 
 function _getCollectionClient() {
-  _getCollectionClient = _asyncToGenerator(function* (endpoint) {
+  _getCollectionClient = _asyncToGenerator(function* (collectionName) {
+    var dbclient = yield getDbClient();
+    return dbclient.collection(collectionName);
+  });
+  return _getCollectionClient.apply(this, arguments);
+}
+
+function getCollectionClientFromEndpoint(_x2) {
+  return _getCollectionClientFromEndpoint.apply(this, arguments);
+}
+
+function _getCollectionClientFromEndpoint() {
+  _getCollectionClientFromEndpoint = _asyncToGenerator(function* (endpoint) {
     if (config.endpointToCollection[endpoint] === undefined) {
       return undefined;
     }
@@ -57,5 +70,5 @@ function _getCollectionClient() {
     var dbclient = yield getDbClient();
     return dbclient.collection(collectionName);
   });
-  return _getCollectionClient.apply(this, arguments);
+  return _getCollectionClientFromEndpoint.apply(this, arguments);
 }

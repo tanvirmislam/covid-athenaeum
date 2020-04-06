@@ -31,7 +31,7 @@ export default {
     return {
       worldDataURL: 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
       covidDataURLs: {
-        confirmed: 'https://covid-athenaeum.herokuapp.com/api/global/confirmed'
+        confirmed: 'https://covid-athenaeum.herokuapp.com/api/countries/confirmed'
       },
       isDataFetched: false,
 
@@ -66,8 +66,8 @@ export default {
       },
 
       colors: {
-        landRed: '220',
-        unavailableCountry: '#BDB9B9',
+        landRed: '225',
+        unavailableCountry: '#8F8D8D',
         selectedCountry: '#F2E4E4',
         water: '#5CA8BF'
       },
@@ -157,7 +157,7 @@ export default {
 
     countryColorScale: {
       get () {
-        return d3.scaleLinear().domain([this.maxCount, this.minCount]).range([0, 180])
+        return d3.scaleSqrt().domain([this.maxCount, 2000, 0]).range([0, 190])
       }
     }
   },

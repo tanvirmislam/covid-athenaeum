@@ -25,7 +25,10 @@ var countryRenameMap = {
   'Congo (Brazzaville)': 'Congo',
   'Congo (Kinshasa)': 'Dem. Rep. Congo',
   'Cote d\'Ivoire': 'Côte d\'Ivoire',
-  'Equatorial Guinea': 'Eq. Guinea'
+  'Equatorial Guinea': 'Eq. Guinea',
+  'Bosnia and Herzegovina': 'Bosnia and Herz.',
+  'ominican Republic': 'Dominican Rep.',
+  'North Macedonia': 'Macedonia'
 };
 var provinceToCountryMap = {
   Greenland: 'Greenland'

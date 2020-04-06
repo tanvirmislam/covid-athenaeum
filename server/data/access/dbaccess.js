@@ -21,15 +21,18 @@ async function getDbClient () {
   return singletonClient.dbclient
 }
 
-async function getCollectionClient (endpoint) {
-  if (config.endpointToCollection[endpoint] === undefined) {
-    return undefined
-  }
-
-  const collectionName = config.endpointToCollection[endpoint]
+async function getCollectionClient (collectionName) {
   const dbclient = await getDbClient()
-
   return dbclient.collection(collectionName)
 }
 
-export { getDbClient, getCollectionClient }
+async function getCollectionClientFromEndpoint (endpoint) {
+  if (config.endpointToCollection[endpoint] === undefined) {
+    return undefined
+  }
+  const collectionName = config.endpointToCollection[endpoint]
+  const dbclient = await getDbClient()
+  return dbclient.collection(collectionName)
+}
+
+export { getDbClient, getCollectionClient, getCollectionClientFromEndpoint }
