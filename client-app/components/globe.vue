@@ -285,8 +285,8 @@ export default {
 
         this.generateCountryToCountMap(this.covidConfirmed)
 
-        this.minCount = parseInt(covidGlobalFetchRequest.confirmed.min.count)
-        this.maxCount = parseInt(covidGlobalFetchRequest.confirmed.max.count)
+        this.minCount = parseInt(this.covidGlobal.confirmed.min.count)
+        this.maxCount = parseInt(this.covidGlobal.confirmed.max.count)
 
         this.isDataFetched = true
       } catch (error) {
