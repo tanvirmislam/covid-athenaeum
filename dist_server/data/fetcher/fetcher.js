@@ -27,7 +27,7 @@ function downloadFile(_x, _x2) {
 
 function _downloadFile() {
   _downloadFile = _asyncToGenerator(function* (filename, url) {
-    var outputPath = path.join(__dirname, '../../../', "raw_data/".concat(filename, ".csv"));
+    var outputPath = path.join(__dirname, '../../../', "raw_data/csv/".concat(filename, ".csv"));
     var writer = fs.createWriteStream(outputPath);
 
     try {

@@ -1,6 +1,6 @@
-import fixNames from './country_name_fixer'
+import fixNames from './csv/countries_data_name_columns_fixer'
 
-export default async function scrape () {
+async function scrapeCsv () {
   try {
     await fixNames()
     return true
@@ -9,3 +9,9 @@ export default async function scrape () {
     return false
   }
 }
+
+async function scrapeJson () {
+  return true
+}
+
+export { scrapeCsv, scrapeJson }

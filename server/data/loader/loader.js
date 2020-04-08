@@ -7,8 +7,8 @@ const exec = util.promisify(require('child_process').exec)
 const dbConfig = getDbConfig()
 
 function getExecCommand (host, db, collection, user, password) {
-  const filepath = path.join(__dirname, '../../../', `raw_data/${collection}.csv`)
-  return `mongoimport -h ${host} -d ${db} -c ${collection} -u ${user} -p ${password} --file ${filepath} --type csv --headerline --drop`
+  const filepath = path.join(__dirname, '../../../', `raw_data/json/${collection}.json`)
+  return `mongoimport --drop --jsonArray -h ${host} -d ${db} -c ${collection} -u ${user} -p ${password} --file ${filepath}`
 }
 
 export default async function load (user, password) {

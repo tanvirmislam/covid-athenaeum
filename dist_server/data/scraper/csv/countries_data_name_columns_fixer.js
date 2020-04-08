@@ -33,9 +33,9 @@ var countryRenameMap = {
 var provinceToCountryMap = {
   Greenland: 'Greenland'
 };
-var confirmedDataFilePath = path.join(__dirname, '../../../', 'raw_data/countries_confirmed.csv');
-var deathsDataFilePath = path.join(__dirname, '../../../', 'raw_data/countries_deaths.csv');
-var recoveredDataFilePath = path.join(__dirname, '../../../', 'raw_data/countries_recovered.csv');
+var confirmedDataFilePath = path.join(__dirname, '../../../../', 'raw_data/csv/countries_confirmed.csv');
+var deathsDataFilePath = path.join(__dirname, '../../../../', 'raw_data/csv/countries_deaths.csv');
+var recoveredDataFilePath = path.join(__dirname, '../../../../', 'raw_data/csv/countries_recovered.csv');
 
 function fixNames() {
   return _fixNames.apply(this, arguments);
@@ -83,16 +83,28 @@ function readCsvFile(csvFilePath) {
       headers: true
     })).on('data', row => {
       if (Object.keys(row).length !== 0) {
+        var renamedRow = {};
+        var notDateFields = ['Province/State', 'Country/Region', 'Lat', 'Long'];
         var currentCountryName = row['Country/Region'];
         var currentProvinceName = row['Province/State'];
+        renamedRow['province/state'] = row['Province/State'].toLowerCase();
 
         if (currentCountryName !== undefined && countryRenameMap[currentCountryName] !== undefined) {
-          row['Country/Region'] = countryRenameMap[currentCountryName];
+          renamedRow['country/region'] = countryRenameMap[currentCountryName].toLowerCase();
         } else if (currentProvinceName !== undefined && provinceToCountryMap[currentProvinceName] !== undefined) {
-          row['Country/Region'] = provinceToCountryMap[currentProvinceName];
+          renamedRow['country/region'] = provinceToCountryMap[currentProvinceName].toLowerCase();
+        } else {
+          renamedRow['country/region'] = row['Country/Region'].toLowerCase();
         }
 
-        data.push(row);
+        renamedRow.lat = row.Lat;
+        renamedRow.long = row.Long;
+        Object.keys(row).forEach(field => {
+          if (!notDateFields.includes(field)) {
+            renamedRow[field] = row[field];
+          }
+        });
+        data.push(renamedRow);
       }
     }).on('end', () => {
       resolve(data);

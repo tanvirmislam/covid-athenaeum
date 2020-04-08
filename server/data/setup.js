@@ -1,5 +1,6 @@
 import fetch from './fetcher/fetcher'
-import scrape from './scraper/scraper'
+import { scrapeCsv, scrapeJson } from './scraper/scraper'
+import format from './csv2json/json_formatter'
 import load from './loader/loader'
 
 export default async function setup (config) {
@@ -11,7 +12,17 @@ export default async function setup (config) {
       return
     }
 
-    status = await scrape()
+    status = await scrapeCsv()
+    if (!status) {
+      return
+    }
+
+    status = await format()
+    if (!status) {
+      return
+    }
+
+    status = await scrapeJson()
     if (!status) {
       return
     }

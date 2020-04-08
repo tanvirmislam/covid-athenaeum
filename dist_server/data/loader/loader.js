@@ -21,8 +21,8 @@ var exec = util.promisify(require('child_process').exec);
 var dbConfig = (0, _config.default)();
 
 function getExecCommand(host, db, collection, user, password) {
-  var filepath = path.join(__dirname, '../../../', "raw_data/".concat(collection, ".csv"));
-  return "mongoimport -h ".concat(host, " -d ").concat(db, " -c ").concat(collection, " -u ").concat(user, " -p ").concat(password, " --file ").concat(filepath, " --type csv --headerline --drop");
+  var filepath = path.join(__dirname, '../../../', "raw_data/json/".concat(collection, ".json"));
+  return "mongoimport --drop --jsonArray -h ".concat(host, " -d ").concat(db, " -c ").concat(collection, " -u ").concat(user, " -p ").concat(password, " --file ").concat(filepath);
 }
 
 function load(_x, _x2) {

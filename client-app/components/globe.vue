@@ -31,7 +31,8 @@ export default {
     return {
       worldDataURL: 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
       covidDataURLs: {
-        confirmed: 'https://covid-athenaeum.herokuapp.com/api/countries/confirmed'
+        latestConfirmed: 'https://covid-athenaeum.herokuapp.com/api/countries/confirmed?onlyLatest=true',
+        global: 'https://covid-athenaeum.herokuapp.com/api/global'
       },
       isDataFetched: false,
 
@@ -39,6 +40,7 @@ export default {
       worldLand: undefined,
       worldCountries: undefined,
       covidConfirmed: undefined,
+      covidGlobal: undefined,
       countryToCount: {},
       minCount: undefined,
       maxCount: undefined,
@@ -263,17 +265,28 @@ export default {
         this.isDataFetched = false
 
         const worldMapFetchRequest = this.$axios.get(this.worldDataURL)
-        const covidConfirmedFetchRequest = this.$axios.get(this.covidDataURLs.confirmed)
+        const covidConfirmedFetchRequest = this.$axios.get(this.covidDataURLs.latestConfirmed)
+        const covidGlobalFetchRequest = this.$axios.get(this.covidDataURLs.global)
 
-        const [worldMapFetchResponse, covidConfirmedFetchhResponse] = await Promise.all([worldMapFetchRequest, covidConfirmedFetchRequest])
+        const [worldMapFetchResponse, covidConfirmedFetchResponse, covidGloalFetchResponse] = await Promise.all(
+          [
+            worldMapFetchRequest,
+            covidConfirmedFetchRequest,
+            covidGlobalFetchRequest
+          ]
+        )
 
         this.world = worldMapFetchResponse.data
-        this.covidConfirmed = covidConfirmedFetchhResponse.data
+        this.covidConfirmed = covidConfirmedFetchResponse.data
+        this.covidGlobal = covidGloalFetchResponse.data
 
         this.worldLand = topojson.feature(this.world, this.world.objects.land)
         this.worldCountries = topojson.feature(this.world, this.world.objects.countries)
 
         this.generateCountryToCountMap(this.covidConfirmed)
+
+        this.minCount = parseInt(covidGlobalFetchRequest.confirmed.min.count)
+        this.maxCount = parseInt(covidGlobalFetchRequest.confirmed.max.count)
 
         this.isDataFetched = true
       } catch (error) {
@@ -287,21 +300,9 @@ export default {
 
     generateCountryToCountMap (covidData) {
       this.countryToCount = {}
-      this.minCount = undefined
-      this.maxCount = undefined
 
-      covidData.forEach((item) => {
-        const name = item['Country/Region'].toLowerCase()
-        const count = item[Object.keys(item).pop()]
-
-        if (this.countryToCount[name] === undefined) {
-          this.countryToCount[name] = count
-        } else {
-          this.countryToCount[name] += count
-        }
-
-        this.minCount = (this.minCount === undefined) ? count : Math.min(this.minCount, count)
-        this.maxCount = (this.maxCount === undefined) ? count : Math.max(this.maxCount, count)
+      covidData.forEach((entry) => {
+        this.countryToCount[entry['country/region']] = parseInt(entry.data[0].count)
       })
     },
 

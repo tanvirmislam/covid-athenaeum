@@ -3,10 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.scrapeCsv = scrapeCsv;
-exports.scrapeJson = scrapeJson;
+exports.default = format;
 
-var _countries_data_name_columns_fixer = _interopRequireDefault(require("./csv/countries_data_name_columns_fixer"));
+var _countries_data_formatter = _interopRequireDefault(require("./countries_data_formatter"));
+
+var _usa_data_formatter = _interopRequireDefault(require("./usa_data_formatter.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -14,30 +15,19 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function scrapeCsv() {
-  return _scrapeCsv.apply(this, arguments);
+function format() {
+  return _format.apply(this, arguments);
 }
 
-function _scrapeCsv() {
-  _scrapeCsv = _asyncToGenerator(function* () {
+function _format() {
+  _format = _asyncToGenerator(function* () {
     try {
-      yield (0, _countries_data_name_columns_fixer.default)();
+      yield Promise.all([(0, _countries_data_formatter.default)(), (0, _usa_data_formatter.default)()]);
       return true;
     } catch (error) {
       console.log(error);
       return false;
     }
   });
-  return _scrapeCsv.apply(this, arguments);
-}
-
-function scrapeJson() {
-  return _scrapeJson.apply(this, arguments);
-}
-
-function _scrapeJson() {
-  _scrapeJson = _asyncToGenerator(function* () {
-    return true;
-  });
-  return _scrapeJson.apply(this, arguments);
+  return _format.apply(this, arguments);
 }

@@ -2,7 +2,11 @@
 
 var _dbaccess = require("../../data/access/dbaccess");
 
-var _total_calculator = require("./util/total_calculator");
+var _global_countries_data_calculator = require("./util/global_countries_data_calculator");
+
+var _valid_param_extractor = require("./util/valid_param_extractor");
+
+var _latest_date_calculator = require("./util/latest_date_calculator");
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
@@ -24,11 +28,90 @@ router.get('/countries/:status', /*#__PURE__*/function () {
         };
         response.send(JSON.stringify(error));
       } else {
-        response.send((yield collection.find({}, {
-          projection: {
-            _id: 0
+        var params = (0, _valid_param_extractor.getValidCountriesDataRequestParams)(request);
+        console.log(params);
+
+        if (params === undefined) {
+          var _error = {
+            error: 'Invalid request parameters'
+          };
+          response.send(JSON.stringify(_error));
+        } else {
+          var match = {};
+          var projection = {
+            _id: 0,
+            'province/state': 1,
+            'country/region': 1,
+            Lat: 1,
+            Long: 1
+          };
+          var dataProjectionFilterCondition = {};
+          var dataProjection = {
+            $filter: {
+              input: '$data',
+              as: 'data',
+              cond: undefined
+            }
+          };
+
+          if (params.country !== 'all') {
+            match['country/region'] = params.country;
           }
-        }).toArray()));
+
+          if (params.onlyLatest === true) {
+            var latestDate = yield (0, _latest_date_calculator.getLatestDate)(collection);
+            dataProjectionFilterCondition = {
+              $eq: ['$$data.date', latestDate]
+            };
+          } else {
+            if (params.dateFrom !== 'start' && params.dateTo !== 'end') {
+              dataProjectionFilterCondition = {
+                $and: [{
+                  $gte: ['$$data.date', params.dateFrom]
+                }, {
+                  $lte: ['$$data.date', params.dateTo]
+                }]
+              };
+            } else if (params.dateFrom !== 'start') {
+              dataProjectionFilterCondition = {
+                $gte: ['$$data.date', params.dateFrom]
+              };
+            } else {
+              dataProjectionFilterCondition = {
+                $lte: ['$$data.date', params.dateTo]
+              };
+            }
+          }
+
+          dataProjection.$filter.cond = dataProjectionFilterCondition;
+          projection.data = dataProjection;
+          var pipeline = [{
+            $match: match
+          }, {
+            $project: projection
+          }];
+          var data = yield collection.aggregate(pipeline).toArray();
+
+          if (params.detailed === true) {
+            response.send(data);
+          } else {
+            var countryNameToData = {};
+            data.forEach(entry => {
+              var name = entry['country/region'];
+
+              if (countryNameToData[name] === undefined) {
+                entry['province/state'] = '';
+                countryNameToData[name] = entry;
+              } else {
+                for (var i = 0; i < entry.data.length; ++i) {
+                  var total = parseInt(countryNameToData[name].data[i].count) + parseInt(entry.data[i].count);
+                  countryNameToData[name].data[i].count = total.toString();
+                }
+              }
+            });
+            response.send(Object.values(countryNameToData));
+          }
+        }
       }
     } catch (error) {
       response.send(error);
@@ -43,9 +126,8 @@ router.get('/global', /*#__PURE__*/function () {
   var _ref2 = _asyncToGenerator(function* (request, response) {
     try {
       var confirmedCollectionClient = yield (0, _dbaccess.getCollectionClientFromEndpoint)('/countries/confirmed');
-      var deathsCollectionClient = yield (0, _dbaccess.getCollectionClientFromEndpoint)('/countries/deaths');
-      var recoveredCollectionClient = yield (0, _dbaccess.getCollectionClientFromEndpoint)('/countries/recovered');
-      var [globalConfirmed, globalDeaths, globalRecovered] = yield Promise.all((0, _total_calculator.getLatestTotalCount)(confirmedCollectionClient), (0, _total_calculator.getLatestTotalCount)(deathsCollectionClient), (0, _total_calculator.getLatestTotalCount)(recoveredCollectionClient));
+      var [deathsCollectionClient, recoveredCollectionClient, latestDate] = yield Promise.all([(0, _dbaccess.getCollectionClientFromEndpoint)('/countries/deaths'), (0, _dbaccess.getCollectionClientFromEndpoint)('/countries/recovered'), (0, _latest_date_calculator.getLatestDate)(confirmedCollectionClient)]);
+      var [globalConfirmed, globalDeaths, globalRecovered] = yield Promise.all([(0, _global_countries_data_calculator.getGlobalCountOfDate)(confirmedCollectionClient, latestDate), (0, _global_countries_data_calculator.getGlobalCountOfDate)(deathsCollectionClient, latestDate), (0, _global_countries_data_calculator.getGlobalCountOfDate)(recoveredCollectionClient, latestDate)]);
       response.send(JSON.stringify({
         confirmed: globalConfirmed,
         deaths: globalDeaths,

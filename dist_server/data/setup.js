@@ -7,7 +7,9 @@ exports.default = setup;
 
 var _fetcher = _interopRequireDefault(require("./fetcher/fetcher"));
 
-var _scraper = _interopRequireDefault(require("./scraper/scraper"));
+var _scraper = require("./scraper/scraper");
+
+var _json_formatter = _interopRequireDefault(require("./csv2json/json_formatter"));
 
 var _loader = _interopRequireDefault(require("./loader/loader"));
 
@@ -31,7 +33,19 @@ function _setup() {
         return;
       }
 
-      status = yield (0, _scraper.default)();
+      status = yield (0, _scraper.scrapeCsv)();
+
+      if (!status) {
+        return;
+      }
+
+      status = yield (0, _json_formatter.default)();
+
+      if (!status) {
+        return;
+      }
+
+      status = yield (0, _scraper.scrapeJson)();
 
       if (!status) {
         return;
