@@ -2,7 +2,7 @@
   <v-container>
     <v-row align="center" justify="center">
       <v-col align="center">
-        <div v-if="!isDataFetched">
+        <div v-if="!isInitialDataFetched">
           Fetching Data
           <span class="ml-2"> <font-awesome-icon :icon="['fas', 'spinner']" pulse /> </span>
         </div>
@@ -23,33 +23,34 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
 
 export default {
   data () {
     return {
-      worldDataURL: 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
-      covidDataURLs: {
-        latestConfirmed: 'https://covid-athenaeum.herokuapp.com/api/countries/confirmed?onlyLatest=true',
-        global: 'https://covid-athenaeum.herokuapp.com/api/global'
+      worldMapData: {
+        land: undefined,
+        countries: undefined
       },
-      isDataFetched: false,
-
-      world: undefined,
-      worldLand: undefined,
-      worldCountries: undefined,
-      covidConfirmed: undefined,
-      covidGlobal: undefined,
-      countryToCount: {},
-      minCount: undefined,
-      maxCount: undefined,
+      covidData: {
+        countriesLatestConfirmed: undefined,
+        global: undefined,
+        display: {
+          type: undefined,
+          countryToCountMap: undefined,
+          minCount: undefined,
+          maxCount: undefined
+        }
+      },
+      isInitialDataFetched: false,
 
       canvas: undefined,
       context: undefined,
       equirectangularCanvas: undefined,
       equirectangularContext: undefined,
-      colorToCountry: {},
+      colorKeyToCountryMap: {},
       isMounted: false,
 
       dimensions: {
@@ -92,6 +93,10 @@ export default {
   },
 
   computed: {
+    ...mapGetters({
+      url: 'urls/url'
+    }),
+
     width: {
       get () {
         return this.dimensions.canvasSquareSide
@@ -159,16 +164,14 @@ export default {
 
     countryColorScale: {
       get () {
-        return d3.scaleSqrt().domain([this.maxCount, 2000, 0]).range([0, 190])
+        return d3.scaleSqrt().domain([this.covidData.display.maxCount, 2000, 0]).range([0, 190])
       }
     }
   },
 
   watch: {
-    isDataFetched () {
-      if (this.isDataFetched) {
-        console.log(this.covidConfirmed)
-        console.log(this.world)
+    isInitialDataFetched () {
+      if (this.isInitialDataFetched) {
         this.setupEquirectangularColorKeys()
       }
     },
@@ -211,12 +214,8 @@ export default {
   },
 
   mounted () {
-    console.log('DOM mounted')
-
-    console.log('Ajusting dimensions')
     this.adjustDimensions()
 
-    console.log('Mounting canvas elements')
     this.canvas = d3
       .select('#canvasContainer')
       .append('canvas')
@@ -232,13 +231,12 @@ export default {
 
     this.context = this.canvas.node().getContext('2d')
     this.equirectangularContext = this.equirectangularCanvas.node().getContext('2d')
+
     this.isMounted = true
 
-    console.log('Setting up initial projection configurations')
     this.equirectangularCanvas.remove()
     this.configureInitialProjection()
 
-    console.log('Attaching event listener to canvas')
     this.canvas
       .on('mousemove', this.onMouseMove)
       .call(d3.drag()
@@ -250,64 +248,56 @@ export default {
         .on('zoom', this.onZoom)
       )
 
-    console.log('Setting draw loop timer')
     this.isRotating = true
     this.lastDrawLoopCallTime = d3.now()
     this.drawLoop = d3.timer(this.draw)
 
-    console.log('Fetching data')
     this.fetchInitialData()
   },
 
   methods: {
     async fetchInitialData () {
       try {
-        this.isDataFetched = false
+        this.isInitialDataFetched = false
 
-        const worldMapFetchRequest = this.$axios.get(this.worldDataURL)
-        const covidConfirmedFetchRequest = this.$axios.get(this.covidDataURLs.latestConfirmed)
-        const covidGlobalFetchRequest = this.$axios.get(this.covidDataURLs.global)
+        const worldMapFetchRequest = this.$axios.get(this.url.worldMapData)
+        const covidLatestConfirmedFetchRequest = this.$axios.get(this.url.covidData.countriesLatestConfirmed)
+        const covidGlobalFetchRequest = this.$axios.get(this.url.covidData.global)
 
-        const [worldMapFetchResponse, covidConfirmedFetchResponse, covidGloalFetchResponse] = await Promise.all(
+        const [worldMapFetchResponse, covidLatestConfirmedFetchResponse, covidGlobalFetchResponse] = await Promise.all(
           [
             worldMapFetchRequest,
-            covidConfirmedFetchRequest,
+            covidLatestConfirmedFetchRequest,
             covidGlobalFetchRequest
           ]
         )
 
-        this.world = worldMapFetchResponse.data
-        this.covidConfirmed = covidConfirmedFetchResponse.data
-        this.covidGlobal = covidGloalFetchResponse.data
+        this.worldMapData.land = topojson.feature(worldMapFetchResponse.data, worldMapFetchResponse.data.objects.land)
+        this.worldMapData.countries = topojson.feature(worldMapFetchResponse.data, worldMapFetchResponse.data.objects.countries)
 
-        this.worldLand = topojson.feature(this.world, this.world.objects.land)
-        this.worldCountries = topojson.feature(this.world, this.world.objects.countries)
+        this.covidData.countriesLatestConfirmed = covidLatestConfirmedFetchResponse.data
+        this.covidData.global = covidGlobalFetchResponse.data
 
-        this.generateCountryToCountMap(this.covidConfirmed)
+        this.generateDisplayData('confirmed', this.covidData.countriesLatestConfirmed)
 
-        this.minCount = parseInt(this.covidGlobal.confirmed.min.count)
-        this.maxCount = parseInt(this.covidGlobal.confirmed.max.count)
-
-        this.isDataFetched = true
+        this.isInitialDataFetched = true
       } catch (error) {
-        this.world = undefined
-        this.worldLand = undefined
-        this.worldCountries = undefined
-        this.covidConfirmed = undefined
-        this.isDataFetched = false
+        this.isInitialDataFetched = false
       }
     },
 
-    generateCountryToCountMap (covidData) {
-      this.countryToCount = {}
+    generateDisplayData (type, data) {
+      this.covidData.display.countryToCountMap = {}
 
-      covidData.forEach((entry) => {
-        this.countryToCount[entry['country/region']] = parseInt(entry.data[0].count)
+      data.forEach((entry) => {
+        this.covidData.display.countryToCountMap[entry['country/region']] = parseInt(entry.data[0].count)
       })
+
+      this.covidData.display.minCount = parseInt(this.covidData.global[type].min.count)
+      this.covidData.display.maxCount = parseInt(this.covidData.global[type].max.count)
     },
 
     adjustDimensions () {
-      console.log('Adjusting dimensions')
       this.dimensions.screenWidth = document.documentElement.clientWidth
       this.dimensions.screenHeight = document.documentElement.clientHeight
 
@@ -339,16 +329,16 @@ export default {
     },
 
     setupEquirectangularColorKeys () {
-      if (!this.isMounted || !this.isDataFetched) {
+      if (!this.isMounted || !this.isInitialDataFetched) {
         return
       }
 
-      let i = this.worldCountries.features.length
+      let i = this.worldMapData.countries.features.length
 
       while (i--) {
-        const country = this.worldCountries.features[i]
+        const country = this.worldMapData.countries.features[i]
         const color = this.getUniqueRGBColor()
-        this.colorToCountry[color] = country
+        this.colorKeyToCountryMap[color] = country
 
         // Set equirectangular projection's rgb color
         this.equirectangularContext.beginPath()
@@ -361,7 +351,7 @@ export default {
     getCountryFromEquirectangularImageData (imageData) {
       const rgbData = imageData.data
       const colorKey = 'rgb(' + rgbData[0] + ',' + rgbData[1] + ',' + rgbData[2] + ')'
-      return this.colorToCountry[colorKey]
+      return this.colorKeyToCountryMap[colorKey]
     },
 
     configureInitialProjection () {
@@ -382,7 +372,7 @@ export default {
         } else if (this.selectedCountry === undefined || this.selectedCountry.id !== country.id) {
           this.selectedCountry = country
           const name = this.selectedCountry.properties.name.toLowerCase()
-          const count = this.countryToCount[name]
+          const count = this.covidData.display.countryToCountMap[name]
 
           if (count !== undefined) {
             this.selectedCountry.properties.count = count
@@ -473,14 +463,14 @@ export default {
 
       // Draw countries
       this.context.lineWidth = 0.3
-      this.worldCountries.features.forEach((country) => {
+      this.worldMapData.countries.features.forEach((country) => {
         let color
-        const countryName = country.properties.name.toLowerCase()
-        const count = this.countryToCount[countryName]
+        const name = country.properties.name.toLowerCase()
+        const count = this.covidData.display.countryToCountMap[name]
 
         if (count !== undefined) {
-          const scaledColorValue = this.countryColorScale(count)
-          color = `rgb(${this.colors.landRed},${scaledColorValue},${scaledColorValue})`
+          const scaledColor = this.countryColorScale(count)
+          color = `rgb(${this.colors.landRed},${scaledColor},${scaledColor})`
         } else {
           color = this.colors.unavailableCountry
         }
@@ -502,7 +492,7 @@ export default {
     },
 
     draw (elapsed) {
-      if (this.isBeingDrawn || !this.isMounted || !this.isDataFetched) {
+      if (this.isBeingDrawn || !this.isMounted || !this.isInitialDataFetched) {
         return
       }
 

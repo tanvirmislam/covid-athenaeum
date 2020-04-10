@@ -27,7 +27,7 @@ var countryRenameMap = {
   'Cote d\'Ivoire': 'Côte d\'Ivoire',
   'Equatorial Guinea': 'Eq. Guinea',
   'Bosnia and Herzegovina': 'Bosnia and Herz.',
-  'ominican Republic': 'Dominican Rep.',
+  'Dominican Republic': 'Dominican Rep.',
   'North Macedonia': 'Macedonia'
 };
 var provinceToCountryMap = {
