@@ -26,26 +26,24 @@ router.get('/countries/:status', /*#__PURE__*/function () {
           error: 'Invalid countries data endpoint',
           accepted: ['/countries/confirmed', '/countries/deaths', '/countries/recovered']
         };
-        response.send(JSON.stringify(error));
+        response.json(error);
       } else {
         var params = (0, _valid_param_extractor.getValidCountriesDataRequestParams)(request);
-        console.log(params);
 
         if (params === undefined) {
           var _error = {
             error: 'Invalid request parameters'
           };
-          response.send(JSON.stringify(_error));
+          response.json(_error);
         } else {
           var match = {};
           var projection = {
             _id: 0,
             'province/state': 1,
             'country/region': 1,
-            Lat: 1,
-            Long: 1
+            lat: 1,
+            long: 1
           };
-          var dataProjectionFilterCondition = {};
           var dataProjection = {
             $filter: {
               input: '$data',
@@ -53,6 +51,7 @@ router.get('/countries/:status', /*#__PURE__*/function () {
               cond: undefined
             }
           };
+          var filterCond = {};
 
           if (params.country !== 'all') {
             match['country/region'] = params.country;
@@ -60,12 +59,12 @@ router.get('/countries/:status', /*#__PURE__*/function () {
 
           if (params.onlyLatest === true) {
             var latestDate = yield (0, _latest_date_calculator.getLatestDate)(collection);
-            dataProjectionFilterCondition = {
+            filterCond = {
               $eq: ['$$data.date', latestDate]
             };
           } else {
             if (params.dateFrom !== 'start' && params.dateTo !== 'end') {
-              dataProjectionFilterCondition = {
+              filterCond = {
                 $and: [{
                   $gte: ['$$data.date', params.dateFrom]
                 }, {
@@ -73,17 +72,17 @@ router.get('/countries/:status', /*#__PURE__*/function () {
                 }]
               };
             } else if (params.dateFrom !== 'start') {
-              dataProjectionFilterCondition = {
+              filterCond = {
                 $gte: ['$$data.date', params.dateFrom]
               };
             } else {
-              dataProjectionFilterCondition = {
+              filterCond = {
                 $lte: ['$$data.date', params.dateTo]
               };
             }
           }
 
-          dataProjection.$filter.cond = dataProjectionFilterCondition;
+          dataProjection.$filter.cond = filterCond;
           projection.data = dataProjection;
           var pipeline = [{
             $match: match
@@ -125,14 +124,14 @@ router.get('/countries/:status', /*#__PURE__*/function () {
 router.get('/global', /*#__PURE__*/function () {
   var _ref2 = _asyncToGenerator(function* (request, response) {
     try {
-      var confirmedCollectionClient = yield (0, _dbaccess.getCollectionClientFromEndpoint)('/countries/confirmed');
-      var [deathsCollectionClient, recoveredCollectionClient, latestDate] = yield Promise.all([(0, _dbaccess.getCollectionClientFromEndpoint)('/countries/deaths'), (0, _dbaccess.getCollectionClientFromEndpoint)('/countries/recovered'), (0, _latest_date_calculator.getLatestDate)(confirmedCollectionClient)]);
+      var confirmedCollectionClient = yield (0, _dbaccess.getCollectionClient)('countries_confirmed');
+      var [deathsCollectionClient, recoveredCollectionClient, latestDate] = yield Promise.all([(0, _dbaccess.getCollectionClient)('countries_deaths'), (0, _dbaccess.getCollectionClient)('countries_recovered'), (0, _latest_date_calculator.getLatestDate)(confirmedCollectionClient)]);
       var [globalConfirmed, globalDeaths, globalRecovered] = yield Promise.all([(0, _global_countries_data_calculator.getGlobalCountOfDate)(confirmedCollectionClient, latestDate), (0, _global_countries_data_calculator.getGlobalCountOfDate)(deathsCollectionClient, latestDate), (0, _global_countries_data_calculator.getGlobalCountOfDate)(recoveredCollectionClient, latestDate)]);
-      response.send(JSON.stringify({
+      response.json({
         confirmed: globalConfirmed,
         deaths: globalDeaths,
         recovered: globalRecovered
-      }));
+      });
     } catch (error) {
       response.send(error);
     }
@@ -140,6 +139,60 @@ router.get('/global', /*#__PURE__*/function () {
 
   return function (_x3, _x4) {
     return _ref2.apply(this, arguments);
+  };
+}());
+router.get('/summary/:country', /*#__PURE__*/function () {
+  var _ref3 = _asyncToGenerator(function* (request, response) {
+    try {
+      var confirmedCollectionClient = yield (0, _dbaccess.getCollectionClient)('countries_confirmed');
+      var [deathsCollectionClient, recoveredCollectionClient, latestDate] = yield Promise.all([(0, _dbaccess.getCollectionClient)('countries_deaths'), (0, _dbaccess.getCollectionClient)('countries_recovered'), (0, _latest_date_calculator.getLatestDate)(confirmedCollectionClient)]);
+      var match = {
+        'country/region': request.params.country.toLowerCase()
+      };
+      var projection = {
+        _id: 0,
+        'province/state': 1,
+        'country/region': 1,
+        lat: 1,
+        long: 1,
+        data: {
+          $filter: {
+            input: '$data',
+            as: 'data',
+            cond: {
+              $eq: ['$$data.date', latestDate]
+            }
+          }
+        }
+      };
+      var pipeline = [{
+        $match: match
+      }, {
+        $project: projection
+      }];
+      var [confirmedData, deathsData, recoveredData] = yield Promise.all([confirmedCollectionClient.aggregate(pipeline).toArray(), deathsCollectionClient.aggregate(pipeline).toArray(), recoveredCollectionClient.aggregate(pipeline).toArray()]);
+      var summary = {
+        'province/state': confirmedData[0]['province/state'],
+        'country/region': confirmedData[0]['country/region'],
+        lat: confirmedData[0].lat,
+        long: confirmedData[0].long,
+        data: {
+          date: latestDate,
+          confirmed: confirmedData[0].data[0].count,
+          deaths: deathsData[0].data[0].count,
+          recovered: recoveredData[0].data[0].count,
+          mortalityRate: (deathsData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5),
+          recovertyRate: (recoveredData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5)
+        }
+      };
+      response.json(summary);
+    } catch (error) {
+      response.send(error);
+    }
+  });
+
+  return function (_x5, _x6) {
+    return _ref3.apply(this, arguments);
   };
 }());
 module.exports = router;

@@ -1,4 +1,4 @@
-import { getCollectionClientFromEndpoint } from '../../data/access/dbaccess'
+import { getCollectionClient, getCollectionClientFromEndpoint } from '../../data/access/dbaccess'
 import { getGlobalCountOfDate } from './util/global_countries_data_calculator'
 import { getValidCountriesDataRequestParams } from './util/valid_param_extractor'
 import { getLatestDate } from './util/latest_date_calculator'
@@ -13,14 +13,13 @@ router.get('/countries/:status', async (request, response) => {
 
     if (collection === undefined) {
       const error = { error: 'Invalid countries data endpoint', accepted: ['/countries/confirmed', '/countries/deaths', '/countries/recovered'] }
-      response.send(JSON.stringify(error))
+      response.json(error)
     } else {
       const params = getValidCountriesDataRequestParams(request)
-      console.log(params)
 
       if (params === undefined) {
         const error = { error: 'Invalid request parameters' }
-        response.send(JSON.stringify(error))
+        response.json(error)
       } else {
         const match = {}
 
@@ -28,11 +27,10 @@ router.get('/countries/:status', async (request, response) => {
           _id: 0,
           'province/state': 1,
           'country/region': 1,
-          Lat: 1,
-          Long: 1
+          lat: 1,
+          long: 1
         }
 
-        let dataProjectionFilterCondition = {}
         const dataProjection = {
           $filter: {
             input: '$data',
@@ -40,6 +38,7 @@ router.get('/countries/:status', async (request, response) => {
             cond: undefined
           }
         }
+        let filterCond = {}
 
         if (params.country !== 'all') {
           match['country/region'] = params.country
@@ -48,29 +47,29 @@ router.get('/countries/:status', async (request, response) => {
         if (params.onlyLatest === true) {
           const latestDate = await getLatestDate(collection)
 
-          dataProjectionFilterCondition = {
+          filterCond = {
             $eq: ['$$data.date', latestDate]
           }
         } else {
           if (params.dateFrom !== 'start' && params.dateTo !== 'end') {
-            dataProjectionFilterCondition = {
+            filterCond = {
               $and: [
                 { $gte: ['$$data.date', params.dateFrom] },
                 { $lte: ['$$data.date', params.dateTo] }
               ]
             }
           } else if (params.dateFrom !== 'start') {
-            dataProjectionFilterCondition = {
+            filterCond = {
               $gte: ['$$data.date', params.dateFrom]
             }
           } else {
-            dataProjectionFilterCondition = {
+            filterCond = {
               $lte: ['$$data.date', params.dateTo]
             }
           }
         }
 
-        dataProjection.$filter.cond = dataProjectionFilterCondition
+        dataProjection.$filter.cond = filterCond
         projection.data = dataProjection
 
         const pipeline = [
@@ -110,12 +109,12 @@ router.get('/countries/:status', async (request, response) => {
 
 router.get('/global', async (request, response) => {
   try {
-    const confirmedCollectionClient = await getCollectionClientFromEndpoint('/countries/confirmed')
+    const confirmedCollectionClient = await getCollectionClient('countries_confirmed')
 
     const [deathsCollectionClient, recoveredCollectionClient, latestDate] = await Promise.all(
       [
-        getCollectionClientFromEndpoint('/countries/deaths'),
-        getCollectionClientFromEndpoint('/countries/recovered'),
+        getCollectionClient('countries_deaths'),
+        getCollectionClient('countries_recovered'),
         getLatestDate(confirmedCollectionClient)
       ]
     )
@@ -128,13 +127,78 @@ router.get('/global', async (request, response) => {
       ]
     )
 
-    response.send(JSON.stringify(
+    response.json(
       {
         confirmed: globalConfirmed,
         deaths: globalDeaths,
         recovered: globalRecovered
       }
-    ))
+    )
+  } catch (error) {
+    response.send(error)
+  }
+})
+
+router.get('/summary/:country', async (request, response) => {
+  try {
+    const confirmedCollectionClient = await getCollectionClient('countries_confirmed')
+
+    const [deathsCollectionClient, recoveredCollectionClient, latestDate] = await Promise.all(
+      [
+        getCollectionClient('countries_deaths'),
+        getCollectionClient('countries_recovered'),
+        getLatestDate(confirmedCollectionClient)
+      ]
+    )
+
+    const match = {
+      'country/region': request.params.country.toLowerCase()
+    }
+
+    const projection = {
+      _id: 0,
+      'province/state': 1,
+      'country/region': 1,
+      lat: 1,
+      long: 1,
+      data: {
+        $filter: {
+          input: '$data',
+          as: 'data',
+          cond: { $eq: ['$$data.date', latestDate] }
+        }
+      }
+    }
+
+    const pipeline = [
+      { $match: match },
+      { $project: projection }
+    ]
+
+    const [confirmedData, deathsData, recoveredData] = await Promise.all(
+      [
+        confirmedCollectionClient.aggregate(pipeline).toArray(),
+        deathsCollectionClient.aggregate(pipeline).toArray(),
+        recoveredCollectionClient.aggregate(pipeline).toArray()
+      ]
+    )
+
+    const summary = {
+      'province/state': confirmedData[0]['province/state'],
+      'country/region': confirmedData[0]['country/region'],
+      lat: confirmedData[0].lat,
+      long: confirmedData[0].long,
+      data: {
+        date: latestDate,
+        confirmed: confirmedData[0].data[0].count,
+        deaths: deathsData[0].data[0].count,
+        recovered: recoveredData[0].data[0].count,
+        mortalityRate: (deathsData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5),
+        recovertyRate: (recoveredData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5)
+      }
+    }
+
+    response.json(summary)
   } catch (error) {
     response.send(error)
   }

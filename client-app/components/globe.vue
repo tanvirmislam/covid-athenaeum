@@ -4,13 +4,15 @@
       <v-col align="center">
         <div v-if="!isInitialDataFetched">
           Fetching Data
-          <span class="ml-2"> <font-awesome-icon :icon="['fas', 'spinner']" pulse /> </span>
+          <span class="ml-1 subtitle-1"> <font-awesome-icon :icon="['fas', 'spinner']" spin /> </span>
         </div>
       </v-col>
     </v-row>
+
     <v-row align="center" justify="center">
       <v-col id="canvasContainer" align="center" />
     </v-row>
+
     <v-row align="center" justify="center">
       <v-col align="center">
         <div v-if="selectedCountry !== undefined">
@@ -19,6 +21,52 @@
         </div>
       </v-col>
     </v-row>
+
+    <div align="center" justify="center" class="mr-5">
+      <v-bottom-sheet v-model="showSpecificCountryData" scrollable inset max-width="800">
+        <v-card class="command">
+          <v-card-title class="grey lighten-2 justify-center">
+            <span v-if="selectedCountry !== undefined" class="subtitle-1"> <strong style="color: black;"> {{ selectedCountry.properties.name.toUpperCase() }} </strong> </span>
+            <span v-else class="subtitle-1"> <strong style="color: black;"> Information </strong> </span>
+          </v-card-title>
+
+          <v-card-text justify="center" class="mt-5">
+            <div v-if="!isSpecificCountryDataGenerated">
+              Generating Data
+              <span class="ml-1 subtitle-1"> <font-awesome-icon :icon="['fas', 'sun']" spin /> </span>
+            </div>
+
+            <v-container>
+              <v-row align="center" justify="center">
+                <v-col v-if="isSpecificCountryDataGenerated && specificCountrySummary !== undefined">
+                  <v-card outlined>
+                    <v-list dense>
+                      <v-subheader> SUMMARY </v-subheader>
+                      <v-list-item>
+                        <v-list-item-content> <v-list-item-title> Confirmed: {{ specificCountrySummary.confirmed }} </v-list-item-title> </v-list-item-content>
+                      </v-list-item>
+                      <v-list-item>
+                        <v-list-item-content> <v-list-item-title> Deaths: {{ specificCountrySummary.deaths }} </v-list-item-title> </v-list-item-content>
+                      </v-list-item>
+                      <v-list-item>
+                        <v-list-item-content> <v-list-item-title> Recovered: {{ specificCountrySummary.recovered }} </v-list-item-title> </v-list-item-content>
+                      </v-list-item>
+                      <v-list-item>
+                        <v-list-item-content> <v-list-item-title> Mortality Rate: {{ specificCountrySummary.mortalityRate }} </v-list-item-title> </v-list-item-content>
+                      </v-list-item>
+                      <v-list-item>
+                        <v-list-item-content> <v-list-item-title> Recovery Rate: {{ specificCountrySummary.recoveryRate }} </v-list-item-title> </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </v-card>
+                </v-col>
+                <v-col id="specificCountryGrowthCurveContainer" align="center" justify="center" />
+              </v-row>
+            </v-container>
+          </v-card-text>
+        </v-card>
+      </v-bottom-sheet>
+    </div>
   </v-container>
 </template>
 
@@ -72,7 +120,8 @@ export default {
         landRed: '225',
         unavailableCountry: '#8F8D8D',
         selectedCountry: '#F2E4E4',
-        water: '#5CA8BF'
+        water: '#5CA8BF',
+        growthCurve: '#69B3A2'
       },
 
       autoRotationDegPerSec: 5,
@@ -86,9 +135,15 @@ export default {
       lastPinchDistance: undefined,
       dragSensitivity: 75,
       pinchZoomSensitivity: 0.08,
+      dragStartTime: undefined,
       isBeingDragged: false,
 
-      nextUniqueColorSeed: 1
+      nextUniqueColorSeed: 1,
+
+      showSpecificCountryData: false,
+      isSpecificCountryDataGenerated: false,
+      specificCountryGrowthCurve: undefined,
+      specificCountrySummary: undefined
     }
   },
 
@@ -202,6 +257,12 @@ export default {
 
     rotations () {
       this.projection.rotate([this.rotations.yaw, this.rotations.pitch, this.rotations.roll])
+    },
+
+    showSpecificCountryData () {
+      if (!this.showSpecificCountryData) {
+        d3.select('#specificCountryGrowthCurveContainer').selectAll('*').remove()
+      }
     }
   },
 
@@ -261,7 +322,7 @@ export default {
         this.isInitialDataFetched = false
 
         const worldMapFetchRequest = this.$axios.get(this.url.worldMapData)
-        const covidLatestConfirmedFetchRequest = this.$axios.get(this.url.covidData.countriesLatestConfirmed)
+        const covidLatestConfirmedFetchRequest = this.$axios.get(`${this.url.covidData.countriesConfirmed}?onlyLatest=true`)
         const covidGlobalFetchRequest = this.$axios.get(this.url.covidData.global)
 
         const [worldMapFetchResponse, covidLatestConfirmedFetchResponse, covidGlobalFetchResponse] = await Promise.all(
@@ -290,11 +351,11 @@ export default {
       this.covidData.display.countryToCountMap = {}
 
       data.forEach((entry) => {
-        this.covidData.display.countryToCountMap[entry['country/region']] = parseInt(entry.data[0].count)
+        this.covidData.display.countryToCountMap[entry['country/region']] = Number(entry.data[0].count)
       })
 
-      this.covidData.display.minCount = parseInt(this.covidData.global[type].min.count)
-      this.covidData.display.maxCount = parseInt(this.covidData.global[type].max.count)
+      this.covidData.display.minCount = Number(this.covidData.global[type].min.count)
+      this.covidData.display.maxCount = Number(this.covidData.global[type].max.count)
     },
 
     adjustDimensions () {
@@ -381,6 +442,79 @@ export default {
       }
     },
 
+    async generateSpecificCountryData () {
+      this.isSpecificCountryDataGenerated = false
+
+      const margin = { top: 20, bottom: 20, left: 60, right: 20 }
+      const height = 250 - margin.top - margin.bottom
+      const width = 300 - margin.left - margin.right
+
+      const [covidConfirmedResponse, covidSummaryResponse] = await Promise.all(
+        [
+          this.$axios.get(`${this.url.covidData.countriesConfirmed}?country=${this.selectedCountry.properties.name}`),
+          this.$axios.get(`${this.url.covidData.countrySummaryBase}/${this.selectedCountry.properties.name}`)
+        ]
+      )
+      const curveData = covidConfirmedResponse.data[0].data
+      const summaryData = covidSummaryResponse.data.data
+
+      this.specificCountrySummary = { ...summaryData }
+      console.log(this.specificCountrySummary)
+
+      const x = d3
+        .scaleTime()
+        .domain(d3.extent(curveData, d => d3.timeParse('%m/%d/%Y')(d.date)))
+        .range([0, width])
+
+      const y = d3
+        .scaleLinear()
+        .domain([0, d3.max(curveData, d => Number(d.count))])
+        .range([height, 0])
+
+      this.specificCountryGrowthCurve = d3
+        .select('#specificCountryGrowthCurveContainer')
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`)
+
+      this.specificCountryGrowthCurve
+        .append('g')
+        .attr('transform', `translate(${0},${height})`)
+        .call(d3.axisBottom(x).ticks(5))
+
+      this.specificCountryGrowthCurve
+        .append('g')
+        .call(d3.axisLeft(y))
+
+      this.specificCountryGrowthCurve
+        .append('path')
+        .datum(curveData)
+        .attr('fill', 'none')
+        .attr('stroke', this.colors.growthCurve)
+        .attr('stroke-width', 1.5)
+        .attr(
+          'd',
+          d3.line()
+            .x(d => x(d3.timeParse('%m/%d/%Y')(d.date)))
+            .y(d => y(d.count))
+        )
+
+      this.specificCountryGrowthCurve
+        .append('g')
+        .selectAll('dot')
+        .data(curveData)
+        .enter()
+        .append('circle')
+        .attr('cx', d => x(d3.timeParse('%m/%d/%Y')(d.date)))
+        .attr('cy', d => y(d.count))
+        .attr('r', 2)
+        .attr('fill', this.colors.growthCurve)
+
+      this.isSpecificCountryDataGenerated = true
+    },
+
     rotateFromDragEvent (event) {
       const rotate = this.projection.rotate()
       const k = this.dragSensitivity / this.projection.scale()
@@ -425,8 +559,9 @@ export default {
       const touches = d3.touches(d3.event.sourceEvent.target)
 
       if (touches.length < 2) {
-        this.isRotating = !this.isRotating
+        this.dragStartTime = d3.now()
         this.isBeingDragged = true
+        this.isRotating = !this.isRotating
       } else if (touches.length === 2) {
         this.lastPinchDistance = this.getDistanceBetweenTwoPoints(touches)
       }
@@ -444,8 +579,16 @@ export default {
 
     onDragEnd () {
       if (this.isBeingDragged) {
-        this.isRotating = !this.isRotating
         this.isBeingDragged = false
+        this.isRotating = !this.isRotating
+      }
+
+      const totalDragTime = d3.now() - this.dragStartTime
+      this.dragStartTime = undefined
+
+      if (totalDragTime < 250.0 && this.selectedCountry !== undefined) {
+        this.showSpecificCountryData = true
+        this.generateSpecificCountryData()
       }
     },
 
@@ -520,4 +663,7 @@ export default {
 </script>
 
 <style>
+  .v-list-item {
+    max-height: 5px;
+  }
 </style>
