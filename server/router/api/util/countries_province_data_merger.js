@@ -1,8 +1,8 @@
-export default function mergeProvinceData (detailedCountriesData) {
-  const countryNameToData = {}
-
+export function mergeProvinceData (detailedCountriesData) {
   return new Promise((resolve, reject) => {
     try {
+      const countryNameToData = {}
+
       detailedCountriesData.forEach((entry) => {
         const name = entry['country/region']
 
@@ -17,7 +17,7 @@ export default function mergeProvinceData (detailedCountriesData) {
         }
       })
 
-      return Object.values(countryNameToData)
+      resolve(Object.values(countryNameToData))
     } catch (error) {
       reject(error)
     }

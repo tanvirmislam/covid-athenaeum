@@ -83,11 +83,8 @@ router.get('/countries/:status', async (request, response) => {
         if (params.detailed === true) {
           response.send(data)
         } else {
-          mergeProvinceData(data)
-            .then((countryData) => {
-              response.send(countryData)
-            })
-            .catch(error => response.send(error))
+          const dataWithProvinceCountMerged = await mergeProvinceData(data)
+          response.send(dataWithProvinceCountMerged)
         }
       }
     }
