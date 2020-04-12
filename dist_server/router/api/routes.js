@@ -96,8 +96,8 @@ router.get('/countries/:status', /*#__PURE__*/function () {
           if (params.detailed === true) {
             response.send(data);
           } else {
-            var dataWithProvinceCountMerged = yield (0, _countries_province_data_merger.mergeProvinceData)(data);
-            response.send(dataWithProvinceCountMerged);
+            var dataWithProvincesCountMerged = yield (0, _countries_province_data_merger.mergeProvinceData)(data);
+            response.send(dataWithProvincesCountMerged);
           }
         }
       }
