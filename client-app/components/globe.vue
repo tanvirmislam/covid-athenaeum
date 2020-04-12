@@ -48,7 +48,7 @@
 
             <v-container>
               <v-row align="center" justify="center">
-                <v-col v-if="isSpecificCountryDataGenerated && specificCountrySummary !== undefined">
+                <v-col cols="12" sm="6" v-if="isSpecificCountryDataGenerated && specificCountrySummary !== undefined">
                   <v-card outlined>
                     <v-list dense>
                       <v-subheader> SUMMARY </v-subheader>
@@ -70,7 +70,7 @@
                     </v-list>
                   </v-card>
                 </v-col>
-                <v-col id="specificCountryGrowthCurveContainer" align="center" justify="center" />
+                <v-col cols="12" sm="6" id="specificCountryGrowthCurveContainer" align="center" justify="center" />
               </v-row>
             </v-container>
           </v-card-text>

@@ -1,5 +1,6 @@
 <template>
   <v-footer app>
+    <v-spacer />
     <span class="caption mr-2">&copy; {{ new Date().getFullYear() }}</span>
   </v-footer>
 </template>

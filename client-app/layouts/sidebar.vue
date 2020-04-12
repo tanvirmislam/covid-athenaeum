@@ -1,7 +1,7 @@
 <template>
   <v-navigation-drawer v-model="isSidebarVisible" app floating temporary :width="sidebarWidth">
     <v-list>
-      <v-list-item v-for="(item, index) in items" :key="index" :to="item.to" router exact>
+      <v-list-item v-for="(item, index) in listItems" :key="index" :to="item.to" router exact>
         <v-list-item-action>
           <v-icon>{{ item.icon }}</v-icon>
         </v-list-item-action>
@@ -19,25 +19,13 @@ import { mapActions } from 'vuex'
 export default {
   data () {
     return {
-      clipped: false,
-      drawer: false,
-      fixed: false,
-      items: [
+      listItems: [
         {
-          icon: 'mdi-apps',
-          title: 'Welcome',
-          to: '/'
-        },
-        {
-          icon: 'mdi-chart-bubble',
+          icon: 'mdi-globe-model',
           title: 'Global Perspective',
           to: '/'
         }
-      ],
-      miniVariant: false,
-      right: true,
-      rightDrawer: false,
-      title: 'Vuetify.js'
+      ]
     }
   },
 
