@@ -8,6 +8,8 @@ var _valid_param_extractor = require("./util/valid_param_extractor");
 
 var _latest_date_calculator = require("./util/latest_date_calculator");
 
+var _countries_province_data_merger = require("./util/countries_province_data_merger");
+
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
@@ -94,21 +96,9 @@ router.get('/countries/:status', /*#__PURE__*/function () {
           if (params.detailed === true) {
             response.send(data);
           } else {
-            var countryNameToData = {};
-            data.forEach(entry => {
-              var name = entry['country/region'];
-
-              if (countryNameToData[name] === undefined) {
-                entry['province/state'] = '';
-                countryNameToData[name] = entry;
-              } else {
-                for (var i = 0; i < entry.data.length; ++i) {
-                  var total = parseInt(countryNameToData[name].data[i].count) + parseInt(entry.data[i].count);
-                  countryNameToData[name].data[i].count = total.toString();
-                }
-              }
-            });
-            response.send(Object.values(countryNameToData));
+            (0, _countries_province_data_merger.mergeProvinceData)(data).then(countryData => {
+              response.send(countryData);
+            }).catch(error => response.send(error));
           }
         }
       }
@@ -171,18 +161,19 @@ router.get('/summary/:country', /*#__PURE__*/function () {
         $project: projection
       }];
       var [confirmedData, deathsData, recoveredData] = yield Promise.all([confirmedCollectionClient.aggregate(pipeline).toArray(), deathsCollectionClient.aggregate(pipeline).toArray(), recoveredCollectionClient.aggregate(pipeline).toArray()]);
+      var [confirmedDataWithProvinceMerged, deathsDataWithProvinceMerged, recoveredDataWithProvinceMerged] = yield Promise.all([(0, _countries_province_data_merger.mergeProvinceData)(confirmedData), (0, _countries_province_data_merger.mergeProvinceData)(deathsData), (0, _countries_province_data_merger.mergeProvinceData)(recoveredData)]);
       var summary = {
-        'province/state': confirmedData[0]['province/state'],
-        'country/region': confirmedData[0]['country/region'],
-        lat: confirmedData[0].lat,
-        long: confirmedData[0].long,
+        'province/state': '',
+        'country/region': confirmedDataWithProvinceMerged[0]['country/region'],
+        lat: confirmedDataWithProvinceMerged[0].lat,
+        long: confirmedDataWithProvinceMerged[0].long,
         data: {
           date: latestDate,
-          confirmed: confirmedData[0].data[0].count,
-          deaths: deathsData[0].data[0].count,
-          recovered: recoveredData[0].data[0].count,
-          mortalityRate: (deathsData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5),
-          recovertyRate: (recoveredData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5)
+          confirmed: confirmedDataWithProvinceMerged[0].data[0].count,
+          deaths: deathsDataWithProvinceMerged[0].data[0].count,
+          recovered: recoveredDataWithProvinceMerged[0].data[0].count,
+          mortalityRate: (deathsDataWithProvinceMerged[0].data[0].count / confirmedDataWithProvinceMerged[0].data[0].count).toFixed(5),
+          recoveryRate: (recoveredDataWithProvinceMerged[0].data[0].count / confirmedDataWithProvinceMerged[0].data[0].count).toFixed(5)
         }
       };
       response.json(summary);

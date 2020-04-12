@@ -2,6 +2,7 @@ import { getCollectionClient, getCollectionClientFromEndpoint } from '../../data
 import { getGlobalCountOfDate } from './util/global_countries_data_calculator'
 import { getValidCountriesDataRequestParams } from './util/valid_param_extractor'
 import { getLatestDate } from './util/latest_date_calculator'
+import { mergeProvinceData } from './util/countries_province_data_merger'
 
 const express = require('express')
 const router = express.Router()
@@ -82,23 +83,11 @@ router.get('/countries/:status', async (request, response) => {
         if (params.detailed === true) {
           response.send(data)
         } else {
-          const countryNameToData = {}
-
-          data.forEach((entry) => {
-            const name = entry['country/region']
-
-            if (countryNameToData[name] === undefined) {
-              entry['province/state'] = ''
-              countryNameToData[name] = entry
-            } else {
-              for (let i = 0; i < entry.data.length; ++i) {
-                const total = parseInt(countryNameToData[name].data[i].count) + parseInt(entry.data[i].count)
-                countryNameToData[name].data[i].count = total.toString()
-              }
-            }
-          })
-
-          response.send(Object.values(countryNameToData))
+          mergeProvinceData(data)
+            .then((countryData) => {
+              response.send(countryData)
+            })
+            .catch(error => response.send(error))
         }
       }
     }
@@ -183,18 +172,26 @@ router.get('/summary/:country', async (request, response) => {
       ]
     )
 
+    const [confirmedDataWithProvinceMerged, deathsDataWithProvinceMerged, recoveredDataWithProvinceMerged] = await Promise.all(
+      [
+        mergeProvinceData(confirmedData),
+        mergeProvinceData(deathsData),
+        mergeProvinceData(recoveredData)
+      ]
+    )
+
     const summary = {
-      'province/state': confirmedData[0]['province/state'],
-      'country/region': confirmedData[0]['country/region'],
-      lat: confirmedData[0].lat,
-      long: confirmedData[0].long,
+      'province/state': '',
+      'country/region': confirmedDataWithProvinceMerged[0]['country/region'],
+      lat: confirmedDataWithProvinceMerged[0].lat,
+      long: confirmedDataWithProvinceMerged[0].long,
       data: {
         date: latestDate,
-        confirmed: confirmedData[0].data[0].count,
-        deaths: deathsData[0].data[0].count,
-        recovered: recoveredData[0].data[0].count,
-        mortalityRate: (deathsData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5),
-        recovertyRate: (recoveredData[0].data[0].count / confirmedData[0].data[0].count).toFixed(5)
+        confirmed: confirmedDataWithProvinceMerged[0].data[0].count,
+        deaths: deathsDataWithProvinceMerged[0].data[0].count,
+        recovered: recoveredDataWithProvinceMerged[0].data[0].count,
+        mortalityRate: (deathsDataWithProvinceMerged[0].data[0].count / confirmedDataWithProvinceMerged[0].data[0].count).toFixed(5),
+        recoveryRate: (recoveredDataWithProvinceMerged[0].data[0].count / confirmedDataWithProvinceMerged[0].data[0].count).toFixed(5)
       }
     }
 
