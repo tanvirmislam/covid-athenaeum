@@ -34,7 +34,8 @@ export default {
   ** Plugins to load before mounting the App
   */
   plugins: [
-    '~/plugins/text2json'
+    '~/plugins/text2json',
+    '~/plugins/string_formatter'
   ],
   /*
   ** Nuxt.js dev-modules

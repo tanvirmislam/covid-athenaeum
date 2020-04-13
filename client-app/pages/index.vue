@@ -1,15 +1,15 @@
 <template>
   <div>
-    <Globe />
+    <globe />
   </div>
 </template>
 
 <script>
-import Globe from '~/components/globe.vue'
+import globe from '~/components/globe.vue'
 
 export default {
   components: {
-    Globe
+    globe
   },
 
   data () {

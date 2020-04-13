@@ -2,9 +2,9 @@
   <v-container>
     <v-row align="center" justify="center">
       <v-col align="center">
-        <div v-if="!isInitialDataFetched">
-          Fetching Data
-          <span class="ml-1 subtitle-1"> <font-awesome-icon :icon="['fas', 'spinner']" spin /> </span>
+        <div v-if="!isInitialDataFetched" class="subtitle-1">
+          <span> Fetching Data </span>
+          <span class="ml-1"> <font-awesome-icon :icon="['fas', 'spinner']" spin /> </span>
         </div>
       </v-col>
     </v-row>
@@ -17,7 +17,7 @@
       <v-col align="center">
         <div v-if="selectedCountry !== undefined">
           <span>{{ selectedCountry.properties.name }}</span>
-          <span v-if="selectedCountry.properties.count !== undefined">: {{ selectedCountry.properties.count }}</span>
+          <span v-if="selectedCountry.properties.count !== undefined">: {{ getCommaSeparatedRepr(selectedCountry.properties.count) }}</span>
         </div>
       </v-col>
     </v-row>
@@ -32,51 +32,52 @@
       </v-btn>
     </v-snackbar>
 
-    <div align="center" justify="center" class="mr-5">
-      <v-bottom-sheet v-model="showSpecificCountryData" scrollable inset max-width="800">
-        <v-card class="command">
-          <v-card-title class="grey lighten-2 justify-center">
-            <span v-if="requestedSpecificCountryName !== undefined" class="subtitle-1"> <strong style="color: black;"> {{ requestedSpecificCountryName.toUpperCase() }} </strong> </span>
-            <span v-else class="subtitle-1"> <strong style="color: black;"> Information </strong> </span>
-          </v-card-title>
+    <v-bottom-sheet v-model="showSpecificCountryData" scrollable inset max-width="800">
+      <v-card class="command">
+        <v-card-title class="grey lighten-2 justify-center">
+          <span v-if="requestedSpecificCountryName !== undefined" class="subtitle-1"> <strong style="color: black;"> {{ requestedSpecificCountryName.toUpperCase() }} </strong> </span>
+          <span v-else class="subtitle-1"> <strong style="color: black;"> Information </strong> </span>
+        </v-card-title>
 
-          <v-card-text justify="center" class="mt-5">
-            <div v-if="!isSpecificCountryDataGenerated">
-              Generating Data
-              <span class="ml-1 subtitle-1"> <font-awesome-icon :icon="['fas', 'sun']" spin /> </span>
-            </div>
+        <v-card-text justify="center" class="mt-5">
+          <v-container>
+            <v-row v-if="!isSpecificCountryDataGenerated" align="center" justify="center">
+              <v-col class="subtitle-1" align="center" justify="center">
+                <span> Generating Data </span>
+                <span class="ml-1"> <font-awesome-icon :icon="['fas', 'sun']" spin /> </span>
+              </v-col>
+            </v-row>
 
-            <v-container>
-              <v-row align="center" justify="center">
-                <v-col cols="12" sm="6" v-if="isSpecificCountryDataGenerated && specificCountrySummary !== undefined">
-                  <v-card outlined>
-                    <v-list dense>
-                      <v-subheader> SUMMARY </v-subheader>
-                      <v-list-item>
-                        <v-list-item-content> Confirmed: {{ specificCountrySummary.confirmed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') }} </v-list-item-content>
-                      </v-list-item>
-                      <v-list-item>
-                        <v-list-item-content> Deaths: {{ specificCountrySummary.deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') }} </v-list-item-content>
-                      </v-list-item>
-                      <v-list-item>
-                        <v-list-item-content> Recovered: {{ specificCountrySummary.recovered.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') }} </v-list-item-content>
-                      </v-list-item>
-                      <v-list-item>
-                        <v-list-item-content> Mortality Rate: {{ specificCountrySummary.mortalityRate }} </v-list-item-content>
-                      </v-list-item>
-                      <v-list-item>
-                        <v-list-item-content> Recovery Rate: {{ specificCountrySummary.recoveryRate }} </v-list-item-content>
-                      </v-list-item>
-                    </v-list>
-                  </v-card>
-                </v-col>
-                <v-col cols="12" sm="6" id="specificCountryGrowthCurveContainer" align="center" justify="center" />
-              </v-row>
-            </v-container>
-          </v-card-text>
-        </v-card>
-      </v-bottom-sheet>
-    </div>
+            <v-row v-touch="{ down: () => showSpecificCountryData = false }" align="center" justify="center">
+              <v-col v-if="isSpecificCountryDataGenerated && specificCountrySummary !== undefined" cols="12" sm="6">
+                <v-card outlined>
+                  <v-list dense>
+                    <v-subheader> SUMMARY </v-subheader>
+                    <v-list-item>
+                      <v-list-item-content> Confirmed: {{ getCommaSeparatedRepr(specificCountrySummary.confirmed) }} </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content> Deaths: {{ getCommaSeparatedRepr(specificCountrySummary.deaths) }} </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content> Recovered: {{ getCommaSeparatedRepr(specificCountrySummary.recovered) }} </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content> Mortality Rate: {{ specificCountrySummary.mortalityRate }} </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content> Recovery Rate: {{ specificCountrySummary.recoveryRate }} </v-list-item-content>
+                    </v-list-item>
+                  </v-list>
+                </v-card>
+              </v-col>
+
+              <v-col id="specificCountryGrowthCurveContainer" cols="12" sm="6" align="center" justify="center" />
+            </v-row>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-bottom-sheet>
   </v-container>
 </template>
 
@@ -187,12 +188,6 @@ export default {
           .translate([this.width / 2, this.height / 2])
           .clipAngle(90)
           .precision(0.1)
-      }
-    },
-
-    graticule: {
-      get () {
-        return d3.geoGraticule()
       }
     },
 
@@ -406,9 +401,16 @@ export default {
 
       this.specificCountrySummary = { ...summaryData }
 
-      const x = d3
+      const timeExtent = d3.extent(curveData, d => d3.timeParse('%m/%d/%Y')(d.date))
+
+      const initialX = d3
         .scaleTime()
-        .domain(d3.extent(curveData, d => d3.timeParse('%m/%d/%Y')(d.date)))
+        .domain([timeExtent[0], timeExtent[0]])
+        .range([0, width])
+
+      const finalX = d3
+        .scaleTime()
+        .domain(timeExtent)
         .range([0, width])
 
       const y = d3
@@ -416,6 +418,7 @@ export default {
         .domain([0, d3.max(curveData, d => Number(d.count))])
         .range([height, 0])
 
+      // Curve
       this.specificCountryGrowthCurve = d3
         .select('#specificCountryGrowthCurveContainer')
         .append('svg')
@@ -424,16 +427,49 @@ export default {
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`)
 
-      this.specificCountryGrowthCurve
+      // X Axis
+      const xAxis = this.specificCountryGrowthCurve
         .append('g')
+        .attr('id', 'specificCountryGrowhCurveXAxis')
         .attr('transform', `translate(${0},${height})`)
-        .call(d3.axisBottom(x).ticks(5))
+        .call(d3.axisBottom(initialX).ticks(5))
 
+      // Y Axis
       this.specificCountryGrowthCurve
         .append('g')
         .call(d3.axisLeft(y))
 
-      this.specificCountryGrowthCurve
+      // Dots
+      const dots = this.specificCountryGrowthCurve
+        .append('g')
+        .selectAll('dot')
+        .data(curveData)
+        .enter()
+        .append('circle')
+        .attr('cx', d => initialX(d3.timeParse('%m/%d/%Y')(d.date)))
+        .attr('cy', d => y(d.count))
+        .attr('r', 2)
+        .attr('fill', this.colors.growthCurve)
+
+      // Open specific country data
+      this.isSpecificCountryDataGenerated = true
+
+      // Animate the curve
+      // Move dots
+      xAxis
+        .transition()
+        .duration(2000)
+        .call(d3.axisBottom(finalX).ticks(5))
+
+      dots
+        .transition()
+        .delay((d, i) => { return (i * 3) })
+        .duration(2000)
+        .attr('cx', d => finalX(d3.timeParse('%m/%d/%Y')(d.date)))
+        .attr('cy', d => y(d.count))
+
+      // Move path
+      const path = this.specificCountryGrowthCurve
         .append('path')
         .datum(curveData)
         .attr('fill', 'none')
@@ -442,22 +478,19 @@ export default {
         .attr(
           'd',
           d3.line()
-            .x(d => x(d3.timeParse('%m/%d/%Y')(d.date)))
+            .x(d => finalX(d3.timeParse('%m/%d/%Y')(d.date)))
             .y(d => y(d.count))
         )
 
-      this.specificCountryGrowthCurve
-        .append('g')
-        .selectAll('dot')
-        .data(curveData)
-        .enter()
-        .append('circle')
-        .attr('cx', d => x(d3.timeParse('%m/%d/%Y')(d.date)))
-        .attr('cy', d => y(d.count))
-        .attr('r', 2)
-        .attr('fill', this.colors.growthCurve)
+      const totalLength = path.node().getTotalLength()
 
-      this.isSpecificCountryDataGenerated = true
+      path
+        .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
+        .attr('stroke-dashoffset', totalLength)
+        .transition()
+        .duration(2000)
+        .ease(d3.easeLinear)
+        .attr('stroke-dashoffset', 0)
     },
 
     adjustDimensions () {
