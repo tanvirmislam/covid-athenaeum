@@ -17,7 +17,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var config = (0, _config.default)();
+var dataConfig = (0, _config.default)();
 var singletonClient;
 
 function getDbClient() {
@@ -27,7 +27,7 @@ function getDbClient() {
 function _getDbClient() {
   _getDbClient = _asyncToGenerator(function* () {
     if (!singletonClient) {
-      singletonClient = new _client.default(config);
+      singletonClient = new _client.default(process.env.COVID_DATABASE_USERNAME, process.env.COVID_DATABASE_PASSWORD, process.env.COVID_DATABASE_HOST, process.env.COVID_DATABASE_NAME);
     }
 
     if (!singletonClient.isConnected) {
@@ -62,11 +62,11 @@ function getCollectionClientFromEndpoint(_x2) {
 
 function _getCollectionClientFromEndpoint() {
   _getCollectionClientFromEndpoint = _asyncToGenerator(function* (endpoint) {
-    if (config.endpointToCollection[endpoint] === undefined) {
+    if (dataConfig.endpointToCollection[endpoint] === undefined) {
       return undefined;
     }
 
-    var collectionName = config.endpointToCollection[endpoint];
+    var collectionName = dataConfig.endpointToCollection[endpoint];
     var dbclient = yield getDbClient();
     return dbclient.collection(collectionName);
   });

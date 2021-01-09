@@ -49,7 +49,6 @@ export default {
   ** Nuxt.js modules
   */
   modules: [
-    // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     [
       'nuxt-fontawesome', {

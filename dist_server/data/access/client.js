@@ -12,10 +12,14 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 var mongodb = require('mongodb');
 
 class Client {
-  constructor(config) {
+  constructor(user, password, host, db) {
     this._dbclient = undefined;
     this._isConnected = false;
-    this._config = config;
+    this._user = user;
+    this._password = password;
+    this._host = host;
+    this._db = db;
+    this._uri = "mongodb+srv://".concat(user, ":").concat(password, "@").concat(host, "/").concat(db);
   }
 
   get dbclient() {
@@ -31,11 +35,11 @@ class Client {
 
     return _asyncToGenerator(function* () {
       try {
-        var client = yield mongodb.MongoClient.connect(_this._config.url, {
+        var client = yield mongodb.MongoClient.connect(_this._uri, {
           useNewUrlParser: true,
           useUnifiedTopology: true
         });
-        _this._dbclient = client.db(_this._config.db);
+        _this._dbclient = client.db(_this._db);
         _this._isConnected = true;
       } catch (err) {
         console.log(err);

@@ -19,39 +19,47 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function setup(_x) {
+function setup() {
   return _setup.apply(this, arguments);
 }
 
 function _setup() {
-  _setup = _asyncToGenerator(function* (config) {
+  _setup = _asyncToGenerator(function* () {
     try {
       var status;
       status = yield (0, _fetcher.default)();
 
       if (!status) {
+        console.log('setup: Failed to fetch');
         return;
       }
 
       status = yield (0, _scraper.scrapeCsv)();
 
       if (!status) {
+        console.log('setup: Failed to scrape CSV file(s)');
         return;
       }
 
       status = yield (0, _json_formatter.default)();
 
       if (!status) {
+        console.log('setup: Failed to format the file(s)');
         return;
       }
 
       status = yield (0, _scraper.scrapeJson)();
 
       if (!status) {
+        console.log('setup: Failed to scrape JSON file(s)');
         return;
       }
 
-      yield (0, _loader.default)(config.user, config.password);
+      status = yield (0, _loader.default)();
+
+      if (!status) {
+        console.log('setup: Failed to load the data into the database');
+      }
     } catch (error) {
       console.log(error);
     }

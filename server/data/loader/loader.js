@@ -1,19 +1,25 @@
-import getDbConfig from '../config'
+import getDataConfig from '../config'
 
 const path = require('path')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
-const dbConfig = getDbConfig()
+const dataConfig = getDataConfig()
 
-function getExecCommand (host, db, collection, user, password) {
+function getExecCommand (user, password, host, db, collection) {
   const filepath = path.join(__dirname, '../../../', `raw_data/json/${collection}.json`)
-  return `mongoimport --drop --jsonArray -h ${host} -d ${db} -c ${collection} -u ${user} -p ${password} --file ${filepath}`
+  return `mongoimport --drop --jsonArray --uri mongodb+srv://${user}:${password}@${host}/${db} --collection ${collection} --type json --file ${filepath}`
 }
 
-export default async function load (user, password) {
-  for (const collection of Object.values(dbConfig.endpointToCollection)) {
-    const cmd = getExecCommand(dbConfig.host, dbConfig.db, collection, user, password)
+export default async function load () {
+  for (const collection of Object.values(dataConfig.endpointToCollection)) {
+    const cmd = getExecCommand(
+      process.env.COVID_DATABASE_USERNAME,
+      process.env.COVID_DATABASE_PASSWORD,
+      process.env.COVID_DATABASE_HOST,
+      process.env.COVID_DATABASE_NAME,
+      collection
+    )
 
     const { stdout, stderr } = await exec(cmd)
     console.log(stdout)

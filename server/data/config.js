@@ -1,9 +1,4 @@
 const config = {
-  db: 'heroku_ql4b57xq',
-  user: 'athenaeum',
-  password: 'knowcovid2019',
-  host: 'ds041556.mlab.com:41556',
-  url: 'mongodb://athenaeum:knowcovid2019@ds041556.mlab.com:41556/heroku_ql4b57xq',
   collectionToRawDataURL: {
     countries_confirmed: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv',
     countries_deaths: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv',
@@ -24,6 +19,6 @@ const config = {
   }
 }
 
-export default function getConfig () {
+export default function getDataConfig () {
   return config
 }

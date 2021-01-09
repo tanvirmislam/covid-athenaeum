@@ -1,10 +1,10 @@
-import getDbConfig from '../config'
+import getDataConfig from '../config'
 
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 
-const downloadURLs = getDbConfig().collectionToRawDataURL
+const downloadURLs = getDataConfig().collectionToRawDataURL
 
 async function downloadFile (filename, url) {
   const outputPath = path.join(__dirname, '../../../', `raw_data/csv/${filename}.csv`)

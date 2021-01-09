@@ -18,21 +18,21 @@ var path = require('path');
 var util = require('util');
 
 var exec = util.promisify(require('child_process').exec);
-var dbConfig = (0, _config.default)();
+var dataConfig = (0, _config.default)();
 
-function getExecCommand(host, db, collection, user, password) {
+function getExecCommand(user, password, host, db, collection) {
   var filepath = path.join(__dirname, '../../../', "raw_data/json/".concat(collection, ".json"));
-  return "mongoimport --drop --jsonArray -h ".concat(host, " -d ").concat(db, " -c ").concat(collection, " -u ").concat(user, " -p ").concat(password, " --file ").concat(filepath);
+  return "mongoimport --drop --jsonArray --uri mongodb+srv://".concat(user, ":").concat(password, "@").concat(host, "/").concat(db, " --collection ").concat(collection, " --type json --file ").concat(filepath);
 }
 
-function load(_x, _x2) {
+function load() {
   return _load.apply(this, arguments);
 }
 
 function _load() {
-  _load = _asyncToGenerator(function* (user, password) {
-    for (var collection of Object.values(dbConfig.endpointToCollection)) {
-      var cmd = getExecCommand(dbConfig.host, dbConfig.db, collection, user, password);
+  _load = _asyncToGenerator(function* () {
+    for (var collection of Object.values(dataConfig.endpointToCollection)) {
+      var cmd = getExecCommand(process.env.COVID_DATABASE_USERNAME, process.env.COVID_DATABASE_PASSWORD, process.env.COVID_DATABASE_HOST, process.env.COVID_DATABASE_NAME, collection);
       var {
         stdout,
         stderr

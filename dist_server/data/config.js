@@ -3,13 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = getConfig;
+exports.default = getDataConfig;
 var config = {
-  db: 'heroku_ql4b57xq',
-  user: 'athenaeum',
-  password: 'knowcovid2019',
-  host: 'ds041556.mlab.com:41556',
-  url: 'mongodb://athenaeum:knowcovid2019@ds041556.mlab.com:41556/heroku_ql4b57xq',
   collectionToRawDataURL: {
     countries_confirmed: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv',
     countries_deaths: 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv',
@@ -30,6 +25,6 @@ var config = {
   }
 };
 
-function getConfig() {
+function getDataConfig() {
   return config;
 }

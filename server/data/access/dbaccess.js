@@ -1,12 +1,17 @@
-import getConfig from '../config'
+import getDataConfig from '../config'
 import Client from './client'
 
-const config = getConfig()
-var singletonClient
+const dataConfig = getDataConfig()
+let singletonClient
 
 async function getDbClient () {
   if (!singletonClient) {
-    singletonClient = new Client(config)
+    singletonClient = new Client(
+      process.env.COVID_DATABASE_USERNAME,
+      process.env.COVID_DATABASE_PASSWORD,
+      process.env.COVID_DATABASE_HOST,
+      process.env.COVID_DATABASE_NAME
+    )
   }
 
   if (!singletonClient.isConnected) {
@@ -27,10 +32,10 @@ async function getCollectionClient (collectionName) {
 }
 
 async function getCollectionClientFromEndpoint (endpoint) {
-  if (config.endpointToCollection[endpoint] === undefined) {
+  if (dataConfig.endpointToCollection[endpoint] === undefined) {
     return undefined
   }
-  const collectionName = config.endpointToCollection[endpoint]
+  const collectionName = dataConfig.endpointToCollection[endpoint]
   const dbclient = await getDbClient()
   return dbclient.collection(collectionName)
 }

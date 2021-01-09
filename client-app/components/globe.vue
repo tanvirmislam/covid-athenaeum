@@ -17,7 +17,7 @@
       <v-col align="center">
         <div v-if="selectedCountry !== undefined">
           <span>{{ selectedCountry.properties.name }}</span>
-          <span v-if="selectedCountry.properties.count !== undefined">: {{ getCommaSeparatedRepr(selectedCountry.properties.count) }}</span>
+          <span v-if="selectedCountry.properties.count !== undefined">: {{ getStringRepr(selectedCountry.properties.count) }}</span>
         </div>
       </v-col>
     </v-row>
@@ -54,13 +54,13 @@
                   <v-list dense>
                     <v-subheader> SUMMARY </v-subheader>
                     <v-list-item>
-                      <v-list-item-content> Confirmed: {{ getCommaSeparatedRepr(specificCountrySummary.confirmed) }} </v-list-item-content>
+                      <v-list-item-content> Confirmed: {{ getStringRepr(specificCountrySummary.confirmed) }} </v-list-item-content>
                     </v-list-item>
                     <v-list-item>
-                      <v-list-item-content> Deaths: {{ getCommaSeparatedRepr(specificCountrySummary.deaths) }} </v-list-item-content>
+                      <v-list-item-content> Deaths: {{ getStringRepr(specificCountrySummary.deaths) }} </v-list-item-content>
                     </v-list-item>
                     <v-list-item>
-                      <v-list-item-content> Recovered: {{ getCommaSeparatedRepr(specificCountrySummary.recovered) }} </v-list-item-content>
+                      <v-list-item-content> Recovered: {{ getStringRepr(specificCountrySummary.recovered) }} </v-list-item-content>
                     </v-list-item>
                     <v-list-item>
                       <v-list-item-content> Mortality Rate: {{ specificCountrySummary.mortalityRate }} </v-list-item-content>
@@ -84,6 +84,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import * as d3 from 'd3'
+import {event as currentEvent} from 'd3'
 import * as topojson from 'topojson-client'
 
 export default {
@@ -610,8 +611,8 @@ export default {
       this.lastPinchDistance = this.getDistanceBetweenTwoPoints(touches)
     },
 
-    onMouseMove () {
-      const mousePos = d3.mouse(d3.event.target)
+    onMouseMove (event) {
+      const mousePos = d3.pointer(event)
       this.selectCountryFromPosition(mousePos)
     },
 
@@ -622,12 +623,12 @@ export default {
       }
     },
 
-    onZoom () {
-      this.scale = this.radius * d3.event.transform.k
+    onZoom (event) {
+      this.scale = this.radius * event.transform.k
     },
 
-    onDragStart () {
-      const touches = d3.touches(d3.event.sourceEvent.target)
+    onDragStart (event) {
+      const touches = d3.pointers(event)
 
       if (touches.length < 2) {
         this.dragStartTime = d3.now()
@@ -638,11 +639,11 @@ export default {
       }
     },
 
-    onDrag () {
-      const touches = d3.touches(d3.event.sourceEvent.target)
+    onDrag (event) {
+      const touches = d3.pointers(event)
 
       if (touches.length < 2) {
-        this.rotateFromDragEvent(d3.event)
+        this.rotateFromDragEvent(event)
       } else if (touches.length === 2) {
         this.scaleFromPinchTouches(touches)
       }
