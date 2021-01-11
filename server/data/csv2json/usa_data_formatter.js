@@ -2,15 +2,15 @@ const path = require('path')
 const fs = require('fs')
 const fastcsv = require('fast-csv')
 
-const dailyDataCsvFilePath = path.join(__dirname, '../../../', 'raw_data/csv/usa_daily.csv')
-const statesDataCsvFilePath = path.join(__dirname, '../../../', 'raw_data/csv/usa_states.csv')
-const totalDataCsvFilePath = path.join(__dirname, '../../../', 'raw_data/csv/usa_total.csv')
-const infoPortalDataCsvFilePath = path.join(__dirname, '../../../', 'raw_data/csv/usa_states_info_portals.csv')
+const dailyDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/usa_daily.csv')
+const statesDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/usa_states.csv')
+const totalDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/usa_total.csv')
+const infoPortalDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/usa_states_info_portals.csv')
 
-const dailyDataJsonFilePath = path.join(__dirname, '../../../', 'raw_data/json/usa_daily.json')
-const statesDataJsonFilePath = path.join(__dirname, '../../../', 'raw_data/json/usa_states.json')
-const totalDataJsonFilePath = path.join(__dirname, '../../../', 'raw_data/json/usa_total.json')
-const infoPortalDataJsonFilePath = path.join(__dirname, '../../../', 'raw_data/json/usa_states_info_portals.json')
+const dailyDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/usa_daily.json')
+const statesDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/usa_states.json')
+const totalDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/usa_total.json')
+const infoPortalDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/usa_states_info_portals.json')
 
 export default async function formatUSAData () {
   try {

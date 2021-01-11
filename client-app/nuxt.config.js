@@ -4,7 +4,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 export default {
   generate: {
-    dir: '../dist_server/public'
+    dir: '../dist/public'
   },
   mode: 'universal',
   /*

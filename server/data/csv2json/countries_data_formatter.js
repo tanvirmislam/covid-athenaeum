@@ -4,13 +4,13 @@ const fastcsv = require('fast-csv')
 
 const notDateFields = ['province/state', 'country/region', 'lat', 'long']
 
-const confirmedDataCsvFilePath = path.join(__dirname, '../../../', 'raw_data/csv/countries_confirmed.csv')
-const deathsDataCsvFilePath = path.join(__dirname, '../../../', 'raw_data/csv/countries_deaths.csv')
-const recoveredDataCsvFilePath = path.join(__dirname, '../../../', 'raw_data/csv/countries_recovered.csv')
+const confirmedDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/countries_confirmed.csv')
+const deathsDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/countries_deaths.csv')
+const recoveredDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/countries_recovered.csv')
 
-const confirmedDataJsonFilePath = path.join(__dirname, '../../../', 'raw_data/json/countries_confirmed.json')
-const deathsDataJsonFilePath = path.join(__dirname, '../../../', 'raw_data/json/countries_deaths.json')
-const recoveredDataJsonFilePath = path.join(__dirname, '../../../', 'raw_data/json/countries_recovered.json')
+const confirmedDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/countries_confirmed.json')
+const deathsDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/countries_deaths.json')
+const recoveredDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/countries_recovered.json')
 
 export default async function formatCoutriesData () {
   try {

@@ -4,7 +4,7 @@ Vue.mixin({
   methods: {
     getStringRepr (num) {
       if (num == 0) {
-        return '---'
+        return 'N/A'
       }
 
       const splitByDecimal = num.toString().split('.')

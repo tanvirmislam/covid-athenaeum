@@ -7,7 +7,7 @@ const axios = require('axios')
 const downloadURLs = getDataConfig().collectionToRawDataURL
 
 async function downloadFile (filename, url) {
-  const outputPath = path.join(__dirname, '../../../', `raw_data/csv/${filename}.csv`)
+  const outputPath = path.join(__dirname, '../../../', `raw-data/csv/${filename}.csv`)
   const writer = fs.createWriteStream(outputPath)
 
   try {

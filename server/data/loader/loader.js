@@ -7,7 +7,7 @@ const exec = util.promisify(require('child_process').exec)
 const dataConfig = getDataConfig()
 
 function getExecCommand (user, password, host, db, collection) {
-  const filepath = path.join(__dirname, '../../../', `raw_data/json/${collection}.json`)
+  const filepath = path.join(__dirname, '../../../', `raw-data/json/${collection}.json`)
   return `mongoimport --drop --jsonArray --uri mongodb+srv://${user}:${password}@${host}/${db} --collection ${collection} --type json --file ${filepath}`
 }
 

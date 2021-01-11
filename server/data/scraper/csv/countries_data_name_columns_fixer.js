@@ -21,9 +21,9 @@ const provinceToCountryMap = {
   Greenland: 'Greenland'
 }
 
-const confirmedDataFilePath = path.join(__dirname, '../../../../', 'raw_data/csv/countries_confirmed.csv')
-const deathsDataFilePath = path.join(__dirname, '../../../../', 'raw_data/csv/countries_deaths.csv')
-const recoveredDataFilePath = path.join(__dirname, '../../../../', 'raw_data/csv/countries_recovered.csv')
+const confirmedDataFilePath = path.join(__dirname, '../../../../', 'raw-data/csv/countries_confirmed.csv')
+const deathsDataFilePath = path.join(__dirname, '../../../../', 'raw-data/csv/countries_deaths.csv')
+const recoveredDataFilePath = path.join(__dirname, '../../../../', 'raw-data/csv/countries_recovered.csv')
 
 export default async function fixNames () {
   try {

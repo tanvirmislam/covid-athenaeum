@@ -27,9 +27,16 @@
         <span> <strong> {{ requestedSpecificCountryName }} </strong>: Show Details </span>
       </v-btn>
 
-      <v-btn text class="subtitle-2" @click.prevent="showSpecificCountryDataPrompt = false">
-        <span style="color: black;"> <font-awesome-icon :icon="['fas', 'times']" /> </span>
-      </v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          class="subtitle-2"
+          text
+          v-bind="attrs"
+          @click.prevent="showSpecificCountryDataPrompt = false"
+        >
+          <span style="color: black;"> <font-awesome-icon :icon="['fas', 'times']" /> </span>
+        </v-btn>
+      </template>
     </v-snackbar>
 
     <v-bottom-sheet v-model="showSpecificCountryData" scrollable inset max-width="800">
