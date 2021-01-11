@@ -5,13 +5,13 @@
   "main": "app.js",
   "scripts": {
     "lint": "eslint ./server/",
-    "transpile": "babel ./server -d dist",
-    "clean": "rimraf dist",
+    "transpile": "babel ./server -d dist-build",
+    "clean": "rimraf dist-build",
     "build-server": "npm-run-all lint clean transpile",
     "build-client": "cd client-app && npm run generate && cd ..",
     "build-prod": "npm-run-all build-server build-client",
-    "dev": "NODE_ENV=development nodemon dist/app.js",
-    "start": "node dist/app.js"
+    "dev": "NODE_ENV=development nodemon dist-build/app.js",
+    "start": "node dist-build/app.js"
   },
   "repository": {
     "type": "git",
