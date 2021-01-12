@@ -1,12 +1,11 @@
-import colors from 'vuetify/es5/util/colors';
-import webpack from 'webpack';
-const TerserPlugin = require('terser-webpack-plugin');
+import colors from 'vuetify/es5/util/colors'
+import webpack from 'webpack'
+import TerserPlugin from 'terser-webpack-plugin'
 
 export default {
   generate: {
     dir: '../dist-build/public'
   },
-  mode: 'universal',
   /*
   ** Headers of the page
   */
@@ -58,7 +57,7 @@ export default {
             icons: ['fas']
           },
           {
-            set:'@fortawesome/free-brands-svg-icons',
+            set: '@fortawesome/free-brands-svg-icons',
             icons: ['fab']
           }
         ]
@@ -105,9 +104,9 @@ export default {
       new TerserPlugin(),
       new webpack.ProvidePlugin({
         // global modules
-        '$': 'jquery',
-        '_': 'lodash',
-      }),
+        $: 'jquery',
+        _: 'lodash'
+      })
     ]
   }
 }

@@ -27,7 +27,7 @@
         <span> <strong> {{ requestedSpecificCountryName }} </strong>: Show Details </span>
       </v-btn>
 
-      <template v-slot:action="{ attrs }">
+      <template #action="{ attrs }">
         <v-btn
           class="subtitle-2"
           text
@@ -91,7 +91,6 @@
 <script>
 import { mapGetters } from 'vuex'
 import * as d3 from 'd3'
-import {event as currentEvent} from 'd3'
 import * as topojson from 'topojson-client'
 
 export default {

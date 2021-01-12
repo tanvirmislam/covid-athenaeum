@@ -3,7 +3,7 @@ import Vue from 'vue'
 Vue.mixin({
   methods: {
     getStringRepr (num) {
-      if (num == 0) {
+      if (!num) {
         return 'N/A'
       }
 
