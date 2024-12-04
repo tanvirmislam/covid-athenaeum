@@ -94,8 +94,8 @@ export default {
   /*
   ** Environment variables
   */
-  env: {
-    baseUrl: process.env.NUXT_BASE_URL
+  publicRuntimeConfig: {
+    clientBaseUrl: process.env.NUXT_CLIENT_BASE_URL
   },
   /*
   ** Build configuration
