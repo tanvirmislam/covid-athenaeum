@@ -92,12 +92,6 @@ export default {
     }
   },
   /*
-  ** Environment variables
-  */
-  publicRuntimeConfig: {
-    clientBaseUrl: process.env.NUXT_CLIENT_BASE_URL
-  },
-  /*
   ** Build configuration
   */
   build: {

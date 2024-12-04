@@ -112,6 +112,7 @@ export default {
       },
       isInitialDataFetched: false,
 
+      baseUrl: undefined,
       canvas: undefined,
       context: undefined,
       equirectangularCanvas: undefined,
@@ -288,6 +289,8 @@ export default {
   },
 
   mounted () {
+    this.baseUrl = window.location.href
+
     this.adjustDimensions()
 
     this.canvas = d3
@@ -337,9 +340,9 @@ export default {
       try {
         this.isInitialDataFetched = false
 
-        const worldMapFetchRequest = this.$axios.get(this.url.worldMapData)
-        const covidLatestConfirmedFetchRequest = this.$axios.get(`${this.url.covidData.countriesConfirmed}?onlyLatest=true`)
-        const covidGlobalFetchRequest = this.$axios.get(this.url.covidData.global)
+        const worldMapFetchRequest = this.$axios.get(this.url.worldMapDataUrl)
+        const covidLatestConfirmedFetchRequest = this.$axios.get(`${this.baseUrl}${this.url.covid.countriesConfirmedDataApiPath}?onlyLatest=true`)
+        const covidGlobalFetchRequest = this.$axios.get(`${this.baseUrl}${this.url.covid.globalDataApiPath}`)
 
         const [worldMapFetchResponse, covidLatestConfirmedFetchResponse, covidGlobalFetchResponse] = await Promise.all(
           [
@@ -386,8 +389,8 @@ export default {
 
       const [covidConfirmedResponse, covidSummaryResponse] = await Promise.all(
         [
-          this.$axios.get(`${this.url.covidData.countriesConfirmed}?country=${this.requestedSpecificCountryName}`),
-          this.$axios.get(`${this.url.covidData.countrySummaryBase}/${this.requestedSpecificCountryName}`)
+          this.$axios.get(`${this.baseUrl}${this.url.covid.countriesConfirmedDataApiPath}?country=${this.requestedSpecificCountryName}`),
+          this.$axios.get(`${this.baseUrl}${this.url.covid.countrySummaryBaseDataApiPath}/${this.requestedSpecificCountryName}`)
         ]
       )
 
