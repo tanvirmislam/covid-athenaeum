@@ -24,7 +24,6 @@ var config = {
     '/usa/states/infoportals': 'usa_states_info_portals'
   }
 };
-
 function getDataConfig() {
   return config;
 }

@@ -4,17 +4,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = formatCoutriesData;
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 var path = require('path');
-
 var fs = require('fs');
-
 var fastcsv = require('fast-csv');
-
 var notDateFields = ['province/state', 'country/region', 'lat', 'long'];
 var confirmedDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/countries_confirmed.csv');
 var deathsDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/countries_deaths.csv');
@@ -22,11 +16,9 @@ var recoveredDataCsvFilePath = path.join(__dirname, '../../../', 'raw-data/csv/c
 var confirmedDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/countries_confirmed.json');
 var deathsDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/countries_deaths.json');
 var recoveredDataJsonFilePath = path.join(__dirname, '../../../', 'raw-data/json/countries_recovered.json');
-
 function formatCoutriesData() {
   return _formatCoutriesData.apply(this, arguments);
 }
-
 function _formatCoutriesData() {
   _formatCoutriesData = _asyncToGenerator(function* () {
     try {
@@ -43,7 +35,6 @@ function _formatCoutriesData() {
   });
   return _formatCoutriesData.apply(this, arguments);
 }
-
 function getObjectsFromCsvFile(csvFilePath) {
   var data = [];
   return new Promise((resolve, reject) => {

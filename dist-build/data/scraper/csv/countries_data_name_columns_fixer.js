@@ -4,19 +4,12 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = fixNames;
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 var path = require('path');
-
 var fs = require('fs');
-
 var fastcsv = require('fast-csv');
-
 var ObjectsToCsv = require('objects-to-csv');
-
 var countryRenameMap = {
   US: 'United States of America',
   Congo: 'Dem. Rep. Congo',
@@ -36,11 +29,9 @@ var provinceToCountryMap = {
 var confirmedDataFilePath = path.join(__dirname, '../../../../', 'raw-data/csv/countries_confirmed.csv');
 var deathsDataFilePath = path.join(__dirname, '../../../../', 'raw-data/csv/countries_deaths.csv');
 var recoveredDataFilePath = path.join(__dirname, '../../../../', 'raw-data/csv/countries_recovered.csv');
-
 function fixNames() {
   return _fixNames.apply(this, arguments);
 }
-
 function _fixNames() {
   _fixNames = _asyncToGenerator(function* () {
     try {
@@ -54,15 +45,12 @@ function _fixNames() {
   });
   return _fixNames.apply(this, arguments);
 }
-
 function processFile(_x) {
   return _processFile.apply(this, arguments);
 }
-
 function _processFile() {
   _processFile = _asyncToGenerator(function* (csvFilePath) {
     console.log("Processing file ".concat(csvFilePath));
-
     try {
       console.log("Reading file ".concat(csvFilePath));
       var data = yield readCsvFile(csvFilePath);
@@ -75,7 +63,6 @@ function _processFile() {
   });
   return _processFile.apply(this, arguments);
 }
-
 function readCsvFile(csvFilePath) {
   var data = [];
   return new Promise((resolve, reject) => {
@@ -88,7 +75,6 @@ function readCsvFile(csvFilePath) {
         var currentCountryName = row['Country/Region'];
         var currentProvinceName = row['Province/State'];
         renamedRow['province/state'] = row['Province/State'].toLowerCase();
-
         if (currentCountryName !== undefined && countryRenameMap[currentCountryName] !== undefined) {
           renamedRow['country/region'] = countryRenameMap[currentCountryName].toLowerCase();
         } else if (currentProvinceName !== undefined && provinceToCountryMap[currentProvinceName] !== undefined) {
@@ -96,7 +82,6 @@ function readCsvFile(csvFilePath) {
         } else {
           renamedRow['country/region'] = row['Country/Region'].toLowerCase();
         }
-
         renamedRow.lat = row.Lat;
         renamedRow.long = row.Long;
         Object.keys(row).forEach(field => {
@@ -113,15 +98,12 @@ function readCsvFile(csvFilePath) {
     });
   });
 }
-
 function writeCsvFile(_x2, _x3) {
   return _writeCsvFile.apply(this, arguments);
 }
-
 function _writeCsvFile() {
   _writeCsvFile = _asyncToGenerator(function* (csvFilePath, data) {
     var csv = new ObjectsToCsv(data);
-
     try {
       yield csv.toDisk(csvFilePath);
     } catch (error) {

@@ -92,6 +92,12 @@ export default {
     }
   },
   /*
+  ** Environment variables
+  */
+  env: {
+    baseUrl: process.env.NUXT_BASE_URL
+  },
+  /*
   ** Build configuration
   */
   build: {

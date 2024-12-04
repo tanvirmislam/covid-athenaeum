@@ -4,14 +4,12 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.mergeProvinceData = mergeProvinceData;
-
 function mergeProvinceData(detailedCountriesData) {
   return new Promise((resolve, reject) => {
     try {
       var countryNameToData = {};
       detailedCountriesData.forEach(entry => {
         var name = entry['country/region'];
-
         if (countryNameToData[name] === undefined) {
           entry['province/state'] = '';
           countryNameToData[name] = entry;

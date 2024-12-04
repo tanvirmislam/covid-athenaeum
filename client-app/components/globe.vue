@@ -67,13 +67,13 @@
                       <v-list-item-content> Deaths: {{ getStringRepr(specificCountrySummary.deaths) }} </v-list-item-content>
                     </v-list-item>
                     <v-list-item>
-                      <v-list-item-content> Recovered: {{ getStringRepr(specificCountrySummary.recovered) }} </v-list-item-content>
+                      <v-list-item-content> Recovered: N/A </v-list-item-content>
                     </v-list-item>
                     <v-list-item>
                       <v-list-item-content> Mortality Rate: {{ specificCountrySummary.mortalityRate }} </v-list-item-content>
                     </v-list-item>
                     <v-list-item>
-                      <v-list-item-content> Recovery Rate: {{ specificCountrySummary.recoveryRate }} </v-list-item-content>
+                      <v-list-item-content> Recovery Rate: N/A </v-list-item-content>
                     </v-list-item>
                   </v-list>
                 </v-card>

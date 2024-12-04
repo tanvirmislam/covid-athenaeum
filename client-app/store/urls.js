@@ -1,4 +1,4 @@
-const BASE_URL = 'https://covid-athenaeum.herokuapp.com'
+const BASE_URL = process.env.NUXT_BASE_URL
 
 export const state = () => ({
   url: {

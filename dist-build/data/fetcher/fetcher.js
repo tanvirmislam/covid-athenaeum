@@ -4,32 +4,21 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = fetch;
-
 var _config = _interopRequireDefault(require("../config"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 var fs = require('fs');
-
 var path = require('path');
-
 var axios = require('axios');
-
 var downloadURLs = (0, _config.default)().collectionToRawDataURL;
-
 function downloadFile(_x, _x2) {
   return _downloadFile.apply(this, arguments);
 }
-
 function _downloadFile() {
   _downloadFile = _asyncToGenerator(function* (filename, url) {
     var outputPath = path.join(__dirname, '../../../', "raw-data/csv/".concat(filename, ".csv"));
     var writer = fs.createWriteStream(outputPath);
-
     try {
       var response = yield axios({
         url: url,
@@ -47,11 +36,9 @@ function _downloadFile() {
   });
   return _downloadFile.apply(this, arguments);
 }
-
 function fetch() {
   return _fetch.apply(this, arguments);
 }
-
 function _fetch() {
   _fetch = _asyncToGenerator(function* () {
     for (var [filename, url] of Object.entries(downloadURLs)) {
@@ -63,7 +50,6 @@ function _fetch() {
         return false;
       }
     }
-
     return true;
   });
   return _fetch.apply(this, arguments);

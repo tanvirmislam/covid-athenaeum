@@ -1,28 +1,20 @@
 "use strict";
 
 var _dbaccess = require("../../data/access/dbaccess");
-
 var _global_countries_data_calculator = require("./util/global_countries_data_calculator");
-
 var _valid_param_extractor = require("./util/valid_param_extractor");
-
 var _latest_date_calculator = require("./util/latest_date_calculator");
-
 var _countries_province_data_merger = require("./util/countries_province_data_merger");
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 var express = require('express');
+var router = express.Router();
 
-var router = express.Router(); // Get Posts
-
+// Get Posts
 router.get('/countries/:status', /*#__PURE__*/function () {
   var _ref = _asyncToGenerator(function* (request, response) {
     try {
       var collection = yield (0, _dbaccess.getCollectionClientFromEndpoint)(request.path);
-
       if (collection === undefined) {
         var error = {
           error: 'Invalid countries data endpoint',
@@ -31,7 +23,6 @@ router.get('/countries/:status', /*#__PURE__*/function () {
         response.json(error);
       } else {
         var params = (0, _valid_param_extractor.getValidCountriesDataRequestParams)(request);
-
         if (params === undefined) {
           var _error = {
             error: 'Invalid request parameters'
@@ -54,11 +45,9 @@ router.get('/countries/:status', /*#__PURE__*/function () {
             }
           };
           var filterCond = {};
-
           if (params.country !== 'all') {
             match['country/region'] = params.country;
           }
-
           if (params.onlyLatest === true) {
             var latestDate = yield (0, _latest_date_calculator.getLatestDate)(collection);
             filterCond = {
@@ -83,7 +72,6 @@ router.get('/countries/:status', /*#__PURE__*/function () {
               };
             }
           }
-
           dataProjection.$filter.cond = filterCond;
           projection.data = dataProjection;
           var pipeline = [{
@@ -92,7 +80,6 @@ router.get('/countries/:status', /*#__PURE__*/function () {
             $project: projection
           }];
           var data = yield collection.aggregate(pipeline).toArray();
-
           if (params.detailed === true) {
             response.send(data);
           } else {
@@ -105,7 +92,6 @@ router.get('/countries/:status', /*#__PURE__*/function () {
       response.send(error);
     }
   });
-
   return function (_x, _x2) {
     return _ref.apply(this, arguments);
   };
@@ -125,7 +111,6 @@ router.get('/global', /*#__PURE__*/function () {
       response.send(error);
     }
   });
-
   return function (_x3, _x4) {
     return _ref2.apply(this, arguments);
   };
@@ -180,7 +165,6 @@ router.get('/summary/:country', /*#__PURE__*/function () {
       response.send(error);
     }
   });
-
   return function (_x5, _x6) {
     return _ref3.apply(this, arguments);
   };
